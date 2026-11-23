@@ -32,10 +32,12 @@ try{
   const failed=new DataTransfer();
   failed.items.add(new File([JSON.stringify(future)],"invalido.json",{type:"application/json"}));
   fileControl.files=failed.files;fileControl.dispatchEvent(new Event("change",{bubbles:true}));
-  await new Promise(resolve=>setTimeout(resolve,150));
+  for(let i=0;i<80&&!document.querySelector("#storage-alert-text").textContent.includes("não suportado");i++)
+    await new Promise(resolve=>setTimeout(resolve,40));
   expect(JSON.parse(localStorage.getItem("comprar-alugar-v1")).rent.monthly===alternative.rent.monthly,
     "Importação de versão futura não sobrescreve cenário válido");
-  expect(document.querySelector("#storage-alert-text").textContent.includes("não suportado"),"Erro de versão fica visível");
+  const alertMessage=document.querySelector("#storage-alert-text").textContent;
+  expect(alertMessage.includes("não suportado"),"Erro de versão fica visível; alerta="+alertMessage+"; toast="+document.querySelector("#toast").textContent);
   let blob;
   const originalCreate=URL.createObjectURL;
   const originalClick=HTMLAnchorElement.prototype.click;
