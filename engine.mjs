@@ -170,9 +170,10 @@ function project(config, kind) {
       }
     }
     if(m===N && isOwner && sale.sellAtEnd!==false){
-      const sold=state.property*(1-num(sale,"discountRate",0)-num(sale,"commissionRate",0))-num(sale,"fixedCosts",0);
+      const grossPrice=state.property*(1-num(sale,"discountRate",0));
+      const sold=grossPrice-state.property*num(sale,"commissionRate",0)-num(sale,"fixedCosts",0);
       const gain=Math.max(0,sold-state.taxBasis);
-      const qualifiesOnlyHome=sale.onlyProperty===true && sale.noSalePast5Years===true && sold<=440000;
+      const qualifiesOnlyHome=sale.onlyProperty===true && sale.noSalePast5Years===true && grossPrice<=440000;
       const gainTax=qualifiesOnlyHome?0:
         sale.taxPolicy==="progressive"?progressiveCapitalGainsTax(gain):
         num(sale,"capitalGainsTaxRate",0)*gain;
