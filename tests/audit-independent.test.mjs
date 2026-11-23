@@ -107,7 +107,7 @@ test("oráculo real: inflação 10% e valorização real 1% compõem em 11,1%",(
   eq(x.summary.netWorthReal,10100,1e-5);
 });
 test("oráculo de liquidez: falta de caixa não fica escondida no patrimônio final",()=>{
-  const c=scenario({cash:500,price:1200,months:1});c.minimumReserve=100;
+  const c=scenario({cash:500,price:1200,months:1});c.minimumReserve=100;c.negativeCashAnnualRate=0;
   const x=project(c,"cash");
   eq(x.months[0].cash,-700);
   eq(x.summary.peakShortfall,800);
