@@ -19,11 +19,18 @@ function payment(principal, monthlyRate, months, system, monthNumber) {
 function validate(config) {
   if(!config || typeof config!=="object" || Array.isArray(config)) throw new Error("Configuração JSON inválida");
   const months=num(config,"months",60),cash=num(config,"initialCash",0);
+  if(config.schemaVersion!==undefined&&config.schemaVersion!=="1.0")throw new Error("Versão de JSON incompatível: "+String(config.schemaVersion));
   if(!Number.isInteger(months)||months<1||months>600) throw new Error("Horizonte deve ter de 1 a 600 meses");
   if(cash<0) throw new Error("Capital inicial não pode ser negativo");
   const p=config.property||{},r=config.rent||{},s=config.sale||{};
   if(num(p,"price",0)<=0) throw new Error("Preço do imóvel deve ser positivo");
   if(num(r,"monthly",0)<0) throw new Error("Aluguel não pode ser negativo");
+  for(const [subject,fields] of [[p,["marketValue","acquisitionFixed","initialRenovation","initialFurnishing","condoMonthly","iptuMonthly","insuranceMonthly","maintenanceMonthly","annualExtraCosts","initialMaintenanceReserve","maintenanceReserveMonthly"]],[r,["deposit","upfrontCosts","exitCosts","earlyExitPenalty","condoMonthly","iptuMonthly","insuranceMonthly","maintenanceMonthly"]],[s,["fixedCosts","additionalTaxBasis"]]]){
+    for(const field of fields)if(num(subject,field,0)<0)throw new Error("Valor negativo não permitido: "+field);
+  }
+  for(const [subject,fields] of [[p,["acquisitionRate","initialRenovationValueRate"]],[s,["discountRate","commissionRate","capitalGainsTaxRate"]]]){
+    for(const field of fields){const v=num(subject,field,0);if(v<0||v>1)throw new Error("Percentual fora de 0 a 100%: "+field);}
+  }
   rateMonthly(num(r,"annualIncrease",0));
   if(num(r,"deposit",0)<0)throw new Error("Caução não pode ser negativa");
   if(num(p,"initialMaintenanceReserve",0)<0||num(p,"maintenanceReserveMonthly",0)<0)throw new Error("Reserva de manutenção inválida");
@@ -35,9 +42,35 @@ function validate(config) {
     if(series!==undefined&&(!Array.isArray(series)||series.length!==months||series.some(v=>!Number.isFinite(v)||v<=-1)))throw new Error("Série mensal inválida: "+key);
   }
   ["appreciationRealAnnual","neighborhoodRealAnnual","propertyRealAnnual"].forEach(k=>rateMonthly(num(p,k,0)));
-  if(config.mortgage) {const x=config.mortgage;if(!["price","sac"].includes(x.system||"price")) throw new Error("Sistema de financiamento desconhecido");if(num(x,"downPayment",0)<0||num(x,"downPayment",0)>num(p,"price"))throw new Error("Entrada inválida");if(!Number.isInteger(num(x,"months",360))||num(x,"months",360)<1)throw new Error("Prazo inválido");rateMonthly(num(x,"annualInterestRate",0));rateMonthly(num(x,"annualIndexRate",0));}
-  if(config.seller){const x=config.seller;if(num(x,"downPayment",0)<0||num(x,"downPayment",0)>num(p,"price"))throw new Error("Entrada inválida");rateMonthly(num(x,"annualInterestRate",0));}
-  if(config.consortium){const x=config.consortium;if(num(x,"credit",0)<0||num(x,"remainingDebt",0)<0||num(x,"credit",0)>num(p,"price"))throw new Error("Crédito de consórcio inválido");}
+  if(config.mortgage) {
+    const x=config.mortgage;
+    if(!["price","sac"].includes(x.system||"price"))throw new Error("Sistema de financiamento desconhecido");
+    if(num(x,"downPayment",0)<0||num(x,"downPayment",0)>num(p,"price"))throw new Error("Entrada inválida");
+    if(!Number.isInteger(num(x,"months",360))||num(x,"months",360)<1)throw new Error("Prazo inválido");
+    for(const key of ["annualInterestRate","annualIndexRate"])rateMonthly(num(x,key,0));
+    if(num(x,"insuranceMonthly",0)<0||num(x,"fees",0)<0)throw new Error("Encargos financeiros negativos");
+  }
+  if(config.seller){
+    const x=config.seller;
+    if(num(x,"downPayment",0)<0||num(x,"downPayment",0)>num(p,"price"))throw new Error("Entrada inválida");
+    if(!Number.isInteger(num(x,"months",60))||num(x,"months",60)<1)throw new Error("Prazo inválido: seller.months");
+    for(const key of ["annualInterestRate","annualCorrectionRate","annualIndexRate"])rateMonthly(num(x,key,0));
+    if(num(x,"fees",0)<0)throw new Error("Taxas de contrato negativas");
+  }
+  if(config.consortium){
+    const x=config.consortium;
+    if(num(x,"credit",0)<0||num(x,"remainingDebt",0)<0||num(x,"credit",0)>num(p,"price"))throw new Error("Crédito de consórcio inválido");
+    if(!Number.isInteger(num(x,"months",1))||num(x,"months",1)<1)throw new Error("Prazo de consórcio inválido");
+    for(const k of ["shareAcquisitionPrice","transferFee","monthlyOtherCharges"])if(num(x,k,0)<0)throw new Error("Encargos consórcio negativos");
+    rateMonthly(num(x,"annualIndexRate",0));
+  }
+  for(const l of [config.mortgage,config.seller].filter(Boolean)){
+    if(l.indexationFrequency!==undefined&&!["annual","monthly"].includes(l.indexationFrequency))throw new Error("Frequência de indexação inválida");
+    if(l.monthlyIndexRates!==undefined&&(!Array.isArray(l.monthlyIndexRates)||l.monthlyIndexRates.length!==months||l.monthlyIndexRates.some(x=>!Number.isFinite(x)||x<=-1)))throw new Error("Série mensal de índice inválida");
+    if(l.monthlyIndexRates!==undefined&&l.indexationFrequency==="annual")throw new Error("Não misturar índice mensal e anual no mesmo financiamento");
+    if(l.extraPayments!==undefined&&(!Array.isArray(l.extraPayments)||l.extraPayments.some(x=>!Number.isInteger(x.month)||x.month<1||x.month>months||!Number.isFinite(x.amount)||x.amount<0)))throw new Error("Amortizações extraordinárias inválidas");
+  }
+  if(config.strategies!==undefined&&(!Array.isArray(config.strategies)||config.strategies.length<1||new Set(config.strategies).size!==config.strategies.length||config.strategies.some(x=>!["rent","cash","mortgage","seller","consortium"].includes(x))))throw new Error("Lista de estratégias inválida");
   return true;
 }
 
@@ -72,6 +105,12 @@ function progressiveCapitalGainsTax(gain) {
     if(remaining<=0)break;
   }
   return tax;
+}
+function debtIndexRate(contract,m,annualDefault=0) {
+  if(contract.monthlyIndexRates!==undefined)return contract.monthlyIndexRates[m-1];
+  const annual=num(contract,"annualIndexRate",annualDefault);
+  return contract.indexationFrequency==="monthly"?rateMonthly(annual):
+    m>1&&(m-1)%12===0?annual:0;
 }
 function rentalEarlyExitPenalty(rent,horizon) {
   if(rent.penaltyMode!=="proportional")return num(rent,"earlyExitPenalty",0);
@@ -153,10 +192,16 @@ function project(config, kind) {
       if(kind==="mortgage"||kind==="seller"){
         const l=kind==="mortgage"?loan:seller;
         if(state.debt>0){
-          if(m>1 && (m-1)%12===0)state.debt*=1+num(l,"annualIndexRate",kind==="seller"?num(l,"annualCorrectionRate",0):0);
-          const accrued=state.debt*state.rate,scheduled=state.system==="sac"?
-            Math.min(state.debt,state.principal/state.originalMonths)+accrued:
-            Math.min(state.debt+accrued,state.originalPayment);
+          const rate=debtIndexRate(l,m,kind==="seller"?num(l,"annualCorrectionRate",0):0);
+          if(rate!==0){
+            const adjustment=state.debt*rate;
+            state.debt+=adjustment;
+            ledger.push({month:m,category:"debt-indexation",amount:0,debtChange:adjustment,description:"Atualização não monetária do saldo devedor"});
+          }
+          // Recálculo mensal sobre saldo e prazo restantes: tanto Price quanto SAC liquidam na data contratual.
+          const remaining=Math.max(1,state.originalMonths-m+1);
+          const accrued=state.debt*state.rate;
+          const scheduled=payment(state.debt,state.rate,remaining,state.system,1);
           const principalPaid=Math.max(0,Math.min(state.debt,scheduled-accrued));
           state.debt-=principalPaid;
           note(m,"loan-interest",-accrued,"Juros do saldo devedor");
@@ -214,8 +259,9 @@ function project(config, kind) {
     }
     if(m===N && isOwner && sale.sellAtEnd!==false){
       const grossPrice=state.property*(1-num(sale,"discountRate",0));
-      const sold=grossPrice-state.property*num(sale,"commissionRate",0)-num(sale,"fixedCosts",0);
-      const gain=Math.max(0,sold-state.taxBasis);
+      const sold=grossPrice-grossPrice*num(sale,"commissionRate",0)-num(sale,"fixedCosts",0);
+      const basis=sale.taxBasisOverride===undefined?state.taxBasis:num(sale,"taxBasisOverride");
+      const gain=Math.max(0,sold-(basis+num(sale,"additionalTaxBasis",0)));
       const qualifiesOnlyHome=sale.onlyProperty===true && sale.noSalePast5Years===true && grossPrice<=440000;
       const gainTax=qualifiesOnlyHome?0:
         sale.taxPolicy==="progressive"?progressiveCapitalGainsTax(gain):
@@ -250,4 +296,4 @@ function compare(config) {
   return {engineVersion:"0.1.0",schemaVersion:"1.0",parameters:config,horizonMonths:config.months,baselineFuture:baseline(config),results:out,leader:out[0]?.kind,alerts:[]};
 }
 
-export {num, rateMonthly, payment, validate, baseline, project, compare, progressiveCapitalGainsTax, rentalEarlyExitPenalty, monthlyRateAt, monthlyAnnuityFactor};
+export {num, rateMonthly, payment, validate, baseline, project, compare, progressiveCapitalGainsTax, rentalEarlyExitPenalty, monthlyRateAt, monthlyAnnuityFactor, debtIndexRate};
