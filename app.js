@@ -1,17 +1,11 @@
 import {compare} from "./model-api.mjs";
 import {sweep,breakEven,firstWinningMonth} from "./analysis.mjs";
+import {migrateScenario,serializeScenario} from "./scenario.mjs";
 
-const defaults = {
-  "schemaVersion":"1.0","months":60,"initialCash":750000,"monthlyContribution":8000,
-  "minimumReserve":25000,"inflationAnnual":.045,"investmentAnnualNet":.09,"negativeCashAnnualRate":.18,
-  "property":{"price":600000,"marketValue":600000,"acquisitionRate":.03,"acquisitionFixed":12000,"initialRenovation":10000,"initialRenovationValueRate":.4,"condoMonthly":1100,"iptuMonthly":300,"insuranceMonthly":80,"maintenanceMonthly":250,"annualExtraCosts":1000,"initialMaintenanceReserve":0,"maintenanceReserveMonthly":0,"reserveAnnualReturn":0,"appreciationRealAnnual":.01,"neighborhoodRealAnnual":0,"propertyRealAnnual":-.005},
-  "rent":{"monthly":3500,"annualIncrease":.045,"condoMonthly":1100,"iptuMonthly":300,"deposit":10500,"upfrontCosts":1800,"prepaid":false,"penaltyMode":"manual","contractMonths":30,"contractPenaltyMonths":3,"depositAnnualReturn":0},
-  "mortgage":{"downPayment":180000,"months":360,"system":"sac","annualInterestRate":.115,"annualIndexRate":0,"insuranceMonthly":160,"fees":4000},
-  "seller":{"downPayment":180000,"months":96,"annualInterestRate":.11,"annualCorrectionRate":.045,"fees":6000},
-  "consortium":{"credit":510000,"shareAcquisitionPrice":80000,"remainingDebt":410000,"months":120,"annualIndexRate":.045,"monthlyOtherCharges":250,"transferFee":3000},
-  "sale":{"sellAtEnd":true,"discountRate":.03,"commissionRate":.05,"fixedCosts":2500,"capitalGainsTaxRate":0,"taxPolicy":"manual","onlyProperty":false,"noSalePast5Years":false},
-  "strategies":["rent","cash","mortgage","seller","consortium"]
-};
+// O preset JSON estático é a única fonte do cenário de exemplo.
+const defaults=await fetch(new URL("./presets/rio-exemplo.json",import.meta.url))
+  .then(response=>{if(!response.ok)throw new Error("Não foi possível carregar o preset ilustrativo");return response.json()})
+  .then(migrateScenario);
 const names={rent:"Alugar",cash:"Comprar à vista",mortgage:"Financiar",seller:"Parcelar diretamente",consortium:"Carta contemplada"};
 const colors={rent:"#3e8ea9",cash:"#267d63",mortgage:"#c19141",seller:"#a784bb",consortium:"#d0746d"};
 const form=[
@@ -26,15 +20,19 @@ const form=[
 ["5. Aluguel equivalente",[
 ["rent.monthly","Aluguel atual","R$/mês"],["rent.annualIncrease","Reajuste contratual anual","% a.a."],["rent.condoMonthly","Condomínio pago por inquilino","R$/mês"],["rent.iptuMonthly","IPTU pago por inquilino","R$/mês"],["rent.insuranceMonthly","Seguro pago por inquilino","R$/mês"],["rent.maintenanceMonthly","Reparos do inquilino","R$/mês"],["rent.deposit","Caução recuperável","R$"],["rent.upfrontCosts","Despesas iniciais de locação","R$"],["rent.exitCosts","Saída e vistoria","R$"],["rent.earlyExitPenalty","Multa manual de saída","R$"],["rent.penaltyMode","Modo de multa","manual/proporcional"],["rent.contractMonths","Prazo contratual","meses",1,600],["rent.contractPenaltyMonths","Multa integral de referência","meses",0,24],["rent.depositAnnualReturn","Rendimento da caução","% a.a."],["rent.prepaid","Aluguel antecipado","sim/não"]]],
 ["6. Financiamento bancário",[
-["mortgage.downPayment","Entrada","R$"],["mortgage.months","Prazo","meses",1,600],["mortgage.system","Sistema de amortização","SAC/Price"],["mortgage.annualInterestRate","Juros anuais efetivos","% a.a."],["mortgage.annualIndexRate","Reajuste anual do saldo (aproximação)","% a.a."],["mortgage.insuranceMonthly","Seguros mensais informados","R$/mês"],["mortgage.fees","Despesas iniciais bancárias","R$"]]],
+["mortgage.downPayment","Entrada","R$"],["mortgage.months","Prazo","meses",1,600],["mortgage.system","Sistema de amortização","SAC/Price"],["mortgage.annualInterestRate","Juros anuais efetivos","% a.a."],["mortgage.annualIndexRate","Taxa anual de correção do saldo","% a.a."],["mortgage.indexationFrequency","Periodicidade da correção","mensal/anual"],["mortgage.insuranceMonthly","Seguros mensais informados","R$/mês"],["mortgage.fees","Despesas iniciais bancárias","R$"]]],
 ["7. Parcelamento direto",[
-["seller.downPayment","Sinal/entrada","R$"],["seller.months","Número de parcelas","meses",1,600],["seller.annualInterestRate","Juros anuais efetivos","% a.a."],["seller.annualCorrectionRate","Correção anual do saldo","% a.a."],["seller.fees","Taxas de contrato","R$"]]],
+["seller.downPayment","Sinal/entrada","R$"],["seller.months","Número de parcelas","meses",1,600],["seller.annualInterestRate","Juros anuais efetivos","% a.a."],["seller.annualCorrectionRate","Correção anual do saldo","% a.a."],["seller.indexationFrequency","Periodicidade da correção","mensal/anual"],["seller.fees","Taxas de contrato","R$"]]],
 ["8. Carta contemplada",[
 ["consortium.credit","Crédito liberado para aquisição","R$"],["consortium.shareAcquisitionPrice","Preço de aquisição da cota","R$"],["consortium.remainingDebt","Saldo contratual restante","R$"],["consortium.months","Prazo residual","meses",1,600],["consortium.annualIndexRate","Correção anual do saldo","% a.a."],["consortium.monthlyOtherCharges","Encargos extras mensais","R$/mês"],["consortium.transferFee","Custos de cessão/transferência","R$"]]],
 ["9. Venda ou manutenção do imóvel",[
-["sale.sellAtEnd","Vender no fim do horizonte","sim/não"],["sale.discountRate","Desconto na negociação","%"],["sale.commissionRate","Comissão de corretagem","%"],["sale.fixedCosts","Outras despesas da venda","R$"],["sale.capitalGainsTaxRate","Alíquota efetiva hipotética do ganho","%"],["sale.taxPolicy","Regra de tributação","manual/progressivo"],["sale.onlyProperty","Declara ser seu único imóvel","sim/não"],["sale.noSalePast5Years","Declara não ter vendido imóvel em cinco anos","sim/não"]]]
+["sale.sellAtEnd","Vender no fim do horizonte","sim/não"],["sale.discountRate","Desconto na negociação","%"],["sale.commissionRate","Comissão de corretagem","%"],["sale.fixedCosts","Outras despesas da venda","R$"],["sale.capitalGainsTaxRate","Alíquota efetiva hipotética do ganho","%"],["sale.taxPolicy","Regra de tributação","manual/progressivo"],["sale.onlyProperty","Declara ser seu único imóvel","sim/não"],["sale.noSalePast5Years","Declara não ter vendido imóvel em cinco anos","sim/não"],["sale.taxBasisOverride","Base fiscal documentada (opcional, substitui a automática)","R$"],["sale.additionalTaxBasis","Custos fiscais adicionais documentados","R$"]]],
+["10. Equivalência entre imóveis",[
+["housingEquivalence.buy.areaSqm","Área do imóvel comprado","m²"],["housingEquivalence.rent.areaSqm","Área do imóvel alugado","m²"],
+["housingEquivalence.buy.bedrooms","Quartos na compra","quartos"],["housingEquivalence.rent.bedrooms","Quartos no aluguel","quartos"],
+["housingEquivalence.buy.neighborhood","Bairro do imóvel comprado","texto"],["housingEquivalence.rent.neighborhood","Bairro do imóvel alugado","texto"]]]
 ];
-let data,report;
+let data,report,storageBlocked=false,invalidBackup=null;
 const $=sel=>document.querySelector(sel);
 const brl=v=>new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0}).format(v);
 const compact=v=>new Intl.NumberFormat("pt-BR",{notation:"compact",maximumFractionDigits:1}).format(v);
@@ -42,7 +40,7 @@ const deep=o=>JSON.parse(JSON.stringify(o));
 function at(path){return path.split(".").reduce((v,k)=>v?.[k],data);}
 function put(path,value){const parts=path.split(".");let dest=data;for(const key of parts.slice(0,-1)){dest[key]??={};dest=dest[key]}dest[parts.at(-1)]=value;}
 function toast(message){const t=$("#toast");t.textContent=message;t.classList.add("visible");clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove("visible"),3500);}
-function safeStore(){try{localStorage.setItem("comprar-alugar-v1",JSON.stringify(data))}catch{}}
+function safeStore(){if(storageBlocked)return;try{localStorage.setItem("comprar-alugar-v1",serializeScenario(data))}catch{}}
 function buildForm(){
   $("#strategies").replaceChildren();
   for(const [key,name] of Object.entries(names)){
@@ -61,7 +59,11 @@ function buildForm(){
       const l=document.createElement("label");l.textContent=label;l.htmlFor="f-"+path.replaceAll(".","-");
       const input=document.createElement("input");input.id=l.htmlFor;input.dataset.path=path;
       const val=at(path);let select;
-      if(unit==="manual/proporcional"||unit==="manual/progressivo"){
+      if(unit==="mensal/anual"){
+        select=document.createElement("select");select.id=input.id;select.dataset.path=path;
+        for(const [v,name] of [["annual","Anual no aniversário"],["monthly","Mensal (taxa anual convertida)"]]){const o=document.createElement("option");o.value=v;o.textContent=name;select.append(o)}
+        select.value=val||"annual";
+      }else if(unit==="manual/proporcional"||unit==="manual/progressivo"){
         select=document.createElement("select");select.id=input.id;select.dataset.path=path;
         const choices=unit==="manual/proporcional"?[["manual","Manual"],["proportional","Proporcional"]]:[["manual","Manual"],["progressive","Progressivo (Brasil)"]];
         for(const [v,name] of choices){const o=document.createElement("option");o.value=v;o.textContent=name;select.append(o)}
@@ -70,13 +72,14 @@ function buildForm(){
         select=document.createElement("select");select.id=input.id;select.dataset.path=path;
         for(const opt of ["sac","price"]){const o=document.createElement("option");o.value=opt;o.textContent=opt.toUpperCase();select.append(o)}select.value=val||"sac";
       }else if(unit==="sim/não"){input.type="checkbox";input.checked=!!val;}
+      else if(unit==="texto"){input.type="text";input.value=String(val??"");}
       else{input.type="number";input.step="any";if(min!==undefined)input.min=String(min);if(max!==undefined)input.max=String(max);input.value=String(unit.startsWith("%")?(Number(val||0)*100):Number(val||0));}
       const control=select||input;
       control.addEventListener("change",()=>{
-        let value=unit==="sim/não"?input.checked:select?select.value:Number(input.value);
+        let value=unit==="sim/não"?input.checked:select?select.value:unit==="texto"?input.value:Number(input.value);
         if(unit.startsWith("%"))value/=100;
         if(typeof value==="number"&&!Number.isFinite(value)){toast("Número inválido");return}
-        put(path,value);run();
+        put(path,value);storageBlocked=false;run();
       });
       const hint=document.createElement("span");hint.className="unit";hint.textContent=unit==="sim/não"?"Aplicável à estratégia":unit.startsWith("%")?"Informar como porcentagem":"Unidade: "+unit;
       field.append(l,control,hint);list.append(field);
@@ -123,8 +126,9 @@ function render(){
   details();chart(results);renderSensitivity();
   const warn=$("#warnings");warn.replaceChildren();
   const notices=[
+    ...report.alerts,
     "Os rendimentos, impostos, reajustes e valores de revenda são hipóteses do usuário — não projeções oficiais.",
-    "A versão inicial aproxima os reajustes de saldo de financiamento e consórcio; confira o cronograma e as regras de cada contrato.",
+    "O índice do saldo bancário é aplicado segundo a frequência informada, com prestação recalculada sobre o prazo restante; confira a proposta e o CET.",
     "Se o imóvel é mantido no fim, seu valor de mercado é patrimônio ilíquido, não dinheiro disponível para saque.",
     "Aluguéis, imóveis e padrão de moradia devem ser equivalentes; o sistema ainda não pontua a diferença de qualidade."
   ];
@@ -139,7 +143,7 @@ function details(){
 function run(){
   try{
     if(!data.strategies.length)throw new Error("Selecione ao menos uma estratégia.");
-    report=compare(data);render();safeStore();
+    data=migrateScenario(data);report=compare(data);render();safeStore();
     $("#warnings-panel").classList.remove("error");
   }catch(error){$("#warnings-panel").classList.add("error");toast(error.message);$("#winner").textContent="Corrigir premissas";$("#comparison-body").replaceChildren();}
 }
@@ -171,11 +175,27 @@ function renderSensitivity(){
 }
 
 function download(filename,content,type){const blob=new Blob([content],{type}),url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-$("#export").addEventListener("click",()=>download("comprar-alugar.json",JSON.stringify(data,null,2),"application/json"));
-$("#reset").addEventListener("click",()=>{data=deep(defaults);buildForm();run();toast("Cenário de exemplo restaurado")});
-$("#upload").addEventListener("change",async e=>{const file=e.target.files?.[0];if(!file)return;try{const imported=JSON.parse(await file.text());compare(imported);data=imported;buildForm();run();toast("JSON importado")}catch(error){toast("Falha na importação: "+error.message)}e.target.value=""});
+$("#export").addEventListener("click",()=>{try{download("comprar-alugar.json",serializeScenario(data),"application/json")}catch(error){toast(error.message)}});
+$("#backup-storage").addEventListener("click",()=>{if(invalidBackup)download("comprar-alugar-backup-nao-validado.json",invalidBackup,"application/json")});
+$("#reset").addEventListener("click",()=>{storageBlocked=false;data=deep(defaults);buildForm();run();$("#storage-alert").hidden=true;toast("Cenário de exemplo restaurado")});
+$("#upload").addEventListener("change",async e=>{const file=e.target.files?.[0];if(!file)return;try{const imported=migrateScenario(JSON.parse(await file.text()));compare(imported);data=imported;storageBlocked=false;buildForm();run();$("#storage-alert").hidden=true;toast("JSON validado e importado")}catch(error){
+  $("#storage-alert-text").textContent="Importação recusada: "+error.message+". Seu cenário anterior continua preservado.";
+  $("#storage-alert").hidden=false;
+  $("#backup-storage").hidden=true;
+  toast("Falha na importação: "+error.message);
+}e.target.value=""});
 $("#export-ledger").addEventListener("click",()=>{const x=report?.results.find(x=>x.kind===$("#detail-strategy").value);if(!x)return;const rows=[["mes","categoria","valor","descricao"],...x.ledger.map(e=>[e.month,e.category,e.amount,e.description])];const csv=rows.map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(";")).join("\n");download("comprar-alugar-"+x.kind+"-ledger.csv","\ufeff"+csv,"text/csv;charset=utf-8");});
 $("#detail-strategy").addEventListener("change",details);
 $("#chart-view").addEventListener("change",()=>{if(report)chart(report.results)});
-try{data=JSON.parse(localStorage.getItem("comprar-alugar-v1"))||deep(defaults);compare(data)}catch{data=deep(defaults)}
+try{
+  const stored=localStorage.getItem("comprar-alugar-v1");
+  data=migrateScenario(stored?JSON.parse(stored):deep(defaults));
+}catch(error){
+  try{invalidBackup=localStorage.getItem("comprar-alugar-v1")}catch{}
+  storageBlocked=true;
+  data=deep(defaults);
+  $("#storage-alert").hidden=false;
+  $("#storage-alert-text").textContent="Cenário salvo não pôde ser carregado: "+error.message+". O original foi preservado; faça um backup antes de restaurar ou editar.";
+  $("#backup-storage").hidden=!invalidBackup;
+}
 buildForm();run();

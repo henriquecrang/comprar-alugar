@@ -30,7 +30,10 @@
         "marketRecoveryRate": 0.3,
         "taxBasisEligible": true
       }
-    ]
+    ],
+    "initialMaintenanceReserve": 0,
+    "maintenanceReserveMonthly": 0,
+    "reserveAnnualReturn": 0
   },
   "rent": {
     "monthly": 3500,
@@ -44,7 +47,11 @@
     "prepaid": false,
     "depositReturnRate": 0,
     "earlyExitPenalty": 0,
-    "exitCosts": 1000
+    "exitCosts": 1000,
+    "penaltyMode": "manual",
+    "contractMonths": 30,
+    "contractPenaltyMonths": 3,
+    "depositAnnualReturn": 0
   },
   "mortgage": {
     "downPayment": 180000,
@@ -53,14 +60,16 @@
     "annualInterestRate": 0.115,
     "annualIndexRate": 0,
     "insuranceMonthly": 160,
-    "fees": 4000
+    "fees": 4000,
+    "indexationFrequency": "annual"
   },
   "seller": {
     "downPayment": 180000,
     "months": 96,
     "annualInterestRate": 0.11,
     "annualCorrectionRate": 0.045,
-    "fees": 6000
+    "fees": 6000,
+    "indexationFrequency": "annual"
   },
   "consortium": {
     "credit": 510000,
@@ -76,7 +85,10 @@
     "discountRate": 0.03,
     "commissionRate": 0.05,
     "fixedCosts": 2500,
-    "capitalGainsTaxRate": 0
+    "capitalGainsTaxRate": 0,
+    "taxPolicy": "manual",
+    "onlyProperty": false,
+    "noSalePast5Years": false
   },
   "strategies": [
     "rent",
@@ -84,5 +96,24 @@
     "mortgage",
     "seller",
     "consortium"
-  ]
+  ],
+  "metadata": {
+    "currency": "BRL",
+    "referenceDate": "2026-11-23",
+    "source": "Premissas didáticas sem cotação imobiliária, bancária ou municipal",
+    "confidence": "low",
+    "assumptions": {
+      "property.price": {
+        "source": "hipótese de exemplo",
+        "referenceDate": "2026-11-23",
+        "confidence": "low",
+        "note": "não representa anúncio ou preço transacionado"
+      },
+      "mortgage.annualInterestRate": {
+        "source": "taxa hipotética de exemplo",
+        "referenceDate": "2026-11-23",
+        "confidence": "low"
+      }
+    }
+  }
 }

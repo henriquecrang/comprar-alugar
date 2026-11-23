@@ -1,5 +1,8 @@
 // Injetado exclusivamente pelo servidor de QA: não integra a UI publicada.
 import {compare} from "../model-api.mjs";
+// O app carrega o preset estático de forma assíncrona; aguardar a primeira renderização.
+for(let i=0;i<100&&document.querySelectorAll("#comparison-body tr").length===0;i++)
+  await new Promise(resolve=>setTimeout(resolve,30));
 const outcome={ok:false,checks:[]};
 const expect=(condition,message)=>{if(!condition)throw new Error(message);outcome.checks.push(message);};
 try{
@@ -25,6 +28,16 @@ try{
   await new Promise(resolve=>setTimeout(resolve,150));
   const imported=JSON.parse(localStorage.getItem("comprar-alugar-v1"));
   expect(imported.rent.monthly===alternative.rent.monthly,"Importação JSON atualiza o cenário");
+  const future=structuredClone(alternative);future.schemaVersion="999";
+  const failed=new DataTransfer();
+  failed.items.add(new File([JSON.stringify(future)],"invalido.json",{type:"application/json"}));
+  fileControl.files=failed.files;fileControl.dispatchEvent(new Event("change",{bubbles:true}));
+  for(let i=0;i<80&&!document.querySelector("#storage-alert-text").textContent.includes("não suportado");i++)
+    await new Promise(resolve=>setTimeout(resolve,40));
+  expect(JSON.parse(localStorage.getItem("comprar-alugar-v1")).rent.monthly===alternative.rent.monthly,
+    "Importação de versão futura não sobrescreve cenário válido");
+  const alertMessage=document.querySelector("#storage-alert-text").textContent;
+  expect(alertMessage.includes("não suportado"),"Erro de versão fica visível; alerta="+alertMessage+"; toast="+document.querySelector("#toast").textContent);
   let blob;
   const originalCreate=URL.createObjectURL;
   const originalClick=HTMLAnchorElement.prototype.click;

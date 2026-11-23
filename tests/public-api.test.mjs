@@ -9,7 +9,7 @@ const preset=JSON.parse(readFileSync(new URL("../presets/rio-exemplo.json", impo
 test("API publica documentada e versao estavel",()=>{
  assert.deepEqual(Object.keys(exported).sort(),["MODEL_API_VERSION","compare","project","validate"].sort());
  assert.equal(MODEL_API_VERSION,"1.0"); assert.equal(validate(preset),true);
- const result=compare(preset); assert.equal(result.schemaVersion,"1.0"); assert.equal(result.engineVersion,"0.1.0");
+ const result=compare(preset); assert.equal(result.schemaVersion,"1.0"); assert.equal(result.engineVersion,"0.2.0");
  assert.ok(result.results.length>=2); assert.equal(typeof result.leader,"string");
 });
 test("motor e API apresentam saídas identicas sem mutar entradas",()=>{
