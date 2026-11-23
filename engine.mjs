@@ -204,6 +204,7 @@ function project(config, kind) {
           const scheduled=payment(state.debt,state.rate,remaining,state.system,1);
           const principalPaid=Math.max(0,Math.min(state.debt,scheduled-accrued));
           state.debt-=principalPaid;
+          if(Math.abs(state.debt)<1e-7)state.debt=0;
           note(m,"loan-interest",-accrued,"Juros do saldo devedor");
           note(m,"loan-principal",-principalPaid,"Amortização do principal");
           const extra=Array.isArray(l.extraPayments)?l.extraPayments.filter(x=>x.month===m).reduce((a,x)=>a+num(x,"amount"),0):0;
