@@ -35,12 +35,17 @@ function breakEven(config,field,first,second,min,max,steps=64){
 }
 function firstWinningMonth(config,first="cash",second="rent",maxMonths=240){
   const selected=copy(config);
+  const series=selected.monthlyRates ? Object.values(selected.monthlyRates).filter(Array.isArray) : [];
+  const upper=series.length?Math.min(maxMonths,...series.map(x=>x.length)):maxMonths;
   const winners=[];
-  for(let month=1;month<=maxMonths;month++){
+  for(let month=1;month<=upper;month++){
     selected.months=month;
+    if(config.monthlyRates){
+      selected.monthlyRates=Object.fromEntries(Object.entries(config.monthlyRates).map(([key,values])=>[key,Array.isArray(values)?values.slice(0,month):values]));
+    }
     const a=project(selected,first).summary.netWorthReal,b=project(selected,second).summary.netWorthReal;
     if(a>=b)winners.push(month);
   }
-  return {firstMonth:winners[0]??null,lastMonth:winners.at(-1)??null,winningMonths:winners.length,checkedMonths:maxMonths};
+  return {firstMonth:winners[0]??null,lastMonth:winners.at(-1)??null,winningMonths:winners.length,checkedMonths:upper};
 }
 export {change,sweep,breakEven,firstWinningMonth};
