@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "1.0",
+  "months": 60,
+  "initialCash": 750000,
+  "monthlyContribution": 8000,
+  "minimumReserve": 25000,
+  "inflationAnnual": 0.045,
+  "investmentAnnualNet": 0.09,
+  "negativeCashAnnualRate": 0.18,
+  "property": {
+    "price": 600000,
+    "marketValue": 600000,
+    "acquisitionRate": 0.03,
+    "acquisitionFixed": 12000,
+    "initialRenovation": 10000,
+    "initialRenovationValueRate": 0.4,
+    "initialFurnishing": 0,
+    "condoMonthly": 1100,
+    "iptuMonthly": 300,
+    "insuranceMonthly": 80,
+    "maintenanceMonthly": 250,
+    "annualExtraCosts": 1000,
+    "appreciationRealAnnual": 0.01,
+    "neighborhoodRealAnnual": 0,
+    "propertyRealAnnual": -0.005,
+    "renovations": [
+      {
+        "month": 36,
+        "cost": 12000,
+        "marketRecoveryRate": 0.3,
+        "taxBasisEligible": true
+      }
+    ]
+  },
+  "rent": {
+    "monthly": 3500,
+    "annualIncrease": 0.045,
+    "condoMonthly": 1100,
+    "iptuMonthly": 300,
+    "insuranceMonthly": 60,
+    "maintenanceMonthly": 80,
+    "deposit": 10500,
+    "upfrontCosts": 1800,
+    "prepaid": false,
+    "depositReturnRate": 0,
+    "earlyExitPenalty": 0,
+    "exitCosts": 1000
+  },
+  "mortgage": {
+    "downPayment": 180000,
+    "months": 360,
+    "system": "sac",
+    "annualInterestRate": 0.115,
+    "annualIndexRate": 0,
+    "insuranceMonthly": 160,
+    "fees": 4000
+  },
+  "seller": {
+    "downPayment": 180000,
+    "months": 96,
+    "annualInterestRate": 0.11,
+    "annualCorrectionRate": 0.045,
+    "fees": 6000
+  },
+  "consortium": {
+    "credit": 510000,
+    "shareAcquisitionPrice": 80000,
+    "remainingDebt": 410000,
+    "months": 120,
+    "annualIndexRate": 0.045,
+    "monthlyOtherCharges": 250,
+    "transferFee": 3000
+  },
+  "sale": {
+    "sellAtEnd": true,
+    "discountRate": 0.03,
+    "commissionRate": 0.05,
+    "fixedCosts": 2500,
+    "capitalGainsTaxRate": 0
+  },
+  "strategies": [
+    "rent",
+    "cash",
+    "mortgage",
+    "seller",
+    "consortium"
+  ]
+}

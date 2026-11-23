@@ -1,0 +1,16 @@
+name: Testes financeiros
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm test
+      - run: python3 main.py presets/rio-exemplo.json > /tmp/out.json
+      - run: node -e "const x=require('/tmp/out.json'); if(!x.results?.length) process.exit(1)"
