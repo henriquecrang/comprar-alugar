@@ -24,12 +24,13 @@ O motor financeiro canônico é o módulo ES `engine.mjs`, exposto pela API púb
 - Inflação e valorização real, despesas recorrentes, reformas, taxas editáveis, aluguel e caução com rendimento.
 - IR progressivo ilustrativo e opção condicionada de isenção para único imóvel (as hipóteses **não** substituem GCAP), multa manual ou proporcional de saída do aluguel.
 - Painel de patrimônio líquido real/nominal, gráfico, custo mensal equivalente, memória mensal, teste de sensibilidade e aluguel de equilíbrio.
-- JSON de configuração, import/export, autosave local; ledger CSV; preset ilustrativo do Rio de Janeiro; suíte CI de testes.
+- JSON versionado v1.0, migração de configurações antigas sem versão, import/export com validação e backup de incompatibilidades, autosave local; ledger CSV; preset ilustrativo único em `presets/rio-exemplo.json`.
+- Auditoria com oráculos financeiros independentes, testes sintéticos de reconciliação e comparação de padrões de moradia.
 
 ## Limitações importantes
-**Não está pronto para decisões contratuais sem conferência.** CET, indexadores reais de contratos, taxas bancárias, parcelamento na planta/INCC, regras complexas de consórcio, IR com fatores de redução e isenção de reinvestimento, obras estruturais e risco geográfico ainda precisam de desenvolvimento. O simulador não coleta cotações automaticamente. Avaliação de mercado e custo fiscal não são a mesma coisa. Importações devem ser revisadas.
+**Ainda não substitui análises contratuais e documentos reais.** CET, indexadores reais de contratos, taxas bancárias, parcelamento na planta/INCC, regras complexas de consórcio, IR com fatores de redução e isenção de reinvestimento, obras estruturais e risco geográfico ainda precisam de desenvolvimento. O simulador não coleta cotações automaticamente. Avaliação de mercado e custo fiscal não são a mesma coisa. Importações devem ser revisadas.
 
-**GitHub Actions confirmou a implantação no Pages em 23/11/2026**: https://henriquecrang.github.io/comprar-alugar/. Ainda faltam inspeção HTTP independente, QA em navegador real, avaliação visual/mobile e auditoria contratual; ver issues #33 e #34.
+**GitHub Actions confirmou a implantação no Pages em 23/11/2026**: https://henriquecrang.github.io/comprar-alugar/. A refatoração posterior confirmou smoke HTTPS com Chrome real no Pages; ainda faltam QA visual/manual completo, acessibilidade e auditoria contratual específica (issues #33 e #34).
 
 ## Documentação e backlog
 - **[Pesquisa, inventário de variáveis e roadmap](docs/plano-e-especificacao.md)** — especificação inicial e 42 entregas.
@@ -40,6 +41,9 @@ O motor financeiro canônico é o módulo ES `engine.mjs`, exposto pela API púb
 - [Workflow de desenvolvimento](docs/workflow-desenvolvimento.md)
 - [Manual de uso](docs/manual.md)
 - [Estado de implementação e pendências](docs/estado-implementacao.md)
+- [Auditoria financeira, casos independentes e decisões](docs/auditoria-economica.md)
+- [Contrato de dados, unidades e overrides](docs/catalogo-parametros.md)
+- [Matriz de fontes brasileiras e limites](docs/matriz-fontes-2026.md)
 
 Referências conceituais: [custo-veiculo](https://github.com/henriquecrang/custo-veiculo), [cenarios-consorcio](https://github.com/henriquecrang/cenarios-consorcio), [viabilidade-airbnb](https://github.com/henriquecrang/viabilidade-airbnb).
 

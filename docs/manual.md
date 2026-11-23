@@ -33,3 +33,19 @@ npm test
 node cli.mjs presets/rio-exemplo.json > resultado.json
 ```
 A suite automatizada valida regras financeiras e o comando, mas não substitui QA em navegador real, inspeção de layouts ou conferência jurídica.
+
+## Vínculo e qualidade da comparação (v0.2)
+
+A seção **Equivalência entre imóveis** permite registrar área em m², quartos e bairro das alternativas. Diferenças maiores que 10% na área, divergência de quartos e bairros geram alertas na tela. Esses campos **não** são monetizados: um imóvel maior não vira automaticamente um retorno financeiro superior. O aluguel e a compra compartilham capital inicial, horizonte e aportes.
+
+## JSON e rastreabilidade
+
+- O cenário padrão vem do arquivo estático `presets/rio-exemplo.json`, carregado pelo GitHub Pages; não há backend.
+- `schemaVersion` deve ser `1.0`. JSON legado sem versão é migrado para `1.0`. Versões não reconhecidas são recusadas.
+- Campos desconhecidos são rejeitados na importação, em vez de ignorados.
+- Um JSON salvo incompatível é mantido no armazenamento original, e a tela oferece opção de baixar backup antes de substituí-lo.
+- `metadata.assumptions` permite indicar fonte, data-base e confiança para cada premissa.
+- `strategyOverrides` permite alterar campos restritos próprios de cada modalidade, via importação JSON, sem alterar capital inicial e horizonte. Consulte [catálogo](catalogo-parametros.md).
+- As prestações SAC/Price indexadas recalculam com saldo devedor e prazo restantes. O índice é aplicado no mês 13 (padrão legado anual) ou mensalmente, se indicado; dados contratuais reais prevalecem.
+
+**Cuidado:** custo equivalente e comparabilidade de moradia são conceitos distintos. Veja [auditoria financeira](auditoria-economica.md) e [matriz de fontes](matriz-fontes-2026.md).

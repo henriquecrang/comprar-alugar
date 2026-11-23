@@ -35,3 +35,7 @@ Os demais itens #3–#42 (exceto os oito encerrados) permanecem **abertos**, inc
 
 ## Refatoração para JS puro — issues #45–#48
 A arquitetura vigente foi definida na [ADR-002](adr-002-static-js.md): aplicação estática sem Python, backend ou build para o navegador. O CLI Node é opcional, e os testes automatizados verificam o mesmo motor usado na interface. As instruções históricas acima identificam o estado do PR #43 e não reintroduzem requisitos Python. Consulte #45–#48 para evidências e critérios de aceite.
+
+## Ciclo de auditoria financeira (PR #50, novembro de 2026)
+
+O ciclo acrescentou: oráculos independentes da função de produção, reconciliação determinística, correção do financiamento indexado e comissão de revenda, importação com schema e migração v1.0, overrides de custos por estratégia, avisos de equivalência habitacional e fontes contratuais documentadas. Evidências: [PR #50](https://github.com/henriquecrang/comprar-alugar/pull/50), [auditoria](auditoria-economica.md), [matriz de fontes](matriz-fontes-2026.md).
