@@ -1,5 +1,8 @@
 // Injetado exclusivamente pelo servidor de QA: não integra a UI publicada.
 import {compare} from "../model-api.mjs";
+// O app carrega o preset estático de forma assíncrona; aguardar a primeira renderização.
+for(let i=0;i<100&&document.querySelectorAll("#comparison-body tr").length===0;i++)
+  await new Promise(resolve=>setTimeout(resolve,30));
 const outcome={ok:false,checks:[]};
 const expect=(condition,message)=>{if(!condition)throw new Error(message);outcome.checks.push(message);};
 try{

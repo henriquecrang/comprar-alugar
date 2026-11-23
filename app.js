@@ -2,18 +2,10 @@ import {compare} from "./model-api.mjs";
 import {sweep,breakEven,firstWinningMonth} from "./analysis.mjs";
 import {migrateScenario,serializeScenario} from "./scenario.mjs";
 
-const defaults = {
-  "schemaVersion":"1.0","months":60,"initialCash":750000,"monthlyContribution":8000,
-  "minimumReserve":25000,"inflationAnnual":.045,"investmentAnnualNet":.09,"negativeCashAnnualRate":.18,
-  "property":{"price":600000,"marketValue":600000,"acquisitionRate":.03,"acquisitionFixed":12000,"initialRenovation":10000,"initialRenovationValueRate":.4,"condoMonthly":1100,"iptuMonthly":300,"insuranceMonthly":80,"maintenanceMonthly":250,"annualExtraCosts":1000,"initialMaintenanceReserve":0,"maintenanceReserveMonthly":0,"reserveAnnualReturn":0,"appreciationRealAnnual":.01,"neighborhoodRealAnnual":0,"propertyRealAnnual":-.005},
-  "rent":{"monthly":3500,"annualIncrease":.045,"condoMonthly":1100,"iptuMonthly":300,"deposit":10500,"upfrontCosts":1800,"prepaid":false,"penaltyMode":"manual","contractMonths":30,"contractPenaltyMonths":3,"depositAnnualReturn":0},
-  "mortgage":{"downPayment":180000,"months":360,"system":"sac","annualInterestRate":.115,"annualIndexRate":0,"insuranceMonthly":160,"fees":4000},
-  "seller":{"downPayment":180000,"months":96,"annualInterestRate":.11,"annualCorrectionRate":.045,"fees":6000},
-  "consortium":{"credit":510000,"shareAcquisitionPrice":80000,"remainingDebt":410000,"months":120,"annualIndexRate":.045,"monthlyOtherCharges":250,"transferFee":3000},
-  "sale":{"sellAtEnd":true,"discountRate":.03,"commissionRate":.05,"fixedCosts":2500,"capitalGainsTaxRate":0,"taxPolicy":"manual","onlyProperty":false,"noSalePast5Years":false},
-  "strategies":["rent","cash","mortgage","seller","consortium"],
-  "metadata":{"currency":"BRL","referenceDate":"2026-11-23","source":"preset ilustrativo não cotação","confidence":"low"}
-};
+// O preset JSON estático é a única fonte do cenário de exemplo.
+const defaults=await fetch(new URL("./presets/rio-exemplo.json",import.meta.url))
+  .then(response=>{if(!response.ok)throw new Error("Não foi possível carregar o preset ilustrativo");return response.json()})
+  .then(migrateScenario);
 const names={rent:"Alugar",cash:"Comprar à vista",mortgage:"Financiar",seller:"Parcelar diretamente",consortium:"Carta contemplada"};
 const colors={rent:"#3e8ea9",cash:"#267d63",mortgage:"#c19141",seller:"#a784bb",consortium:"#d0746d"};
 const form=[
