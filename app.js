@@ -4,7 +4,7 @@ import {sweep,breakEven,firstWinningMonth} from "./analysis.mjs";
 const defaults = {
   "schemaVersion":"1.0","months":60,"initialCash":750000,"monthlyContribution":8000,
   "minimumReserve":25000,"inflationAnnual":.045,"investmentAnnualNet":.09,"negativeCashAnnualRate":.18,
-  "property":{"price":600000,"marketValue":600000,"acquisitionRate":.03,"acquisitionFixed":12000,"initialRenovation":10000,"initialRenovationValueRate":.4,"condoMonthly":1100,"iptuMonthly":300,"insuranceMonthly":80,"maintenanceMonthly":250,"annualExtraCosts":1000,"appreciationRealAnnual":.01,"neighborhoodRealAnnual":0,"propertyRealAnnual":-.005},
+  "property":{"price":600000,"marketValue":600000,"acquisitionRate":.03,"acquisitionFixed":12000,"initialRenovation":10000,"initialRenovationValueRate":.4,"condoMonthly":1100,"iptuMonthly":300,"insuranceMonthly":80,"maintenanceMonthly":250,"annualExtraCosts":1000,"initialMaintenanceReserve":0,"maintenanceReserveMonthly":0,"reserveAnnualReturn":0,"appreciationRealAnnual":.01,"neighborhoodRealAnnual":0,"propertyRealAnnual":-.005},
   "rent":{"monthly":3500,"annualIncrease":.045,"condoMonthly":1100,"iptuMonthly":300,"deposit":10500,"upfrontCosts":1800,"prepaid":false,"penaltyMode":"manual","contractMonths":30,"contractPenaltyMonths":3,"depositAnnualReturn":0},
   "mortgage":{"downPayment":180000,"months":360,"system":"sac","annualInterestRate":.115,"annualIndexRate":0,"insuranceMonthly":160,"fees":4000},
   "seller":{"downPayment":180000,"months":96,"annualInterestRate":.11,"annualCorrectionRate":.045,"fees":6000},
@@ -20,7 +20,7 @@ const form=[
 ["2. Imóvel e aquisição",[
 ["property.price","Preço negociado","R$"],["property.marketValue","Avaliação atual de mercado","R$"],["property.acquisitionRate","ITBI e taxas proporcionais","%"],["property.acquisitionFixed","Cartório, avaliação e documentação","R$"],["property.initialRenovation","Reforma de entrada","R$"],["property.initialRenovationValueRate","Valorização imediata atribuída à reforma","%"],["property.initialFurnishing","Mobília e equipamentos iniciais","R$"]]],
 ["3. Custos do proprietário",[
-["property.condoMonthly","Condomínio mensal","R$/mês"],["property.iptuMonthly","IPTU mensal equivalente","R$/mês"],["property.insuranceMonthly","Seguro residencial","R$/mês"],["property.maintenanceMonthly","Manutenção recorrente","R$/mês"],["property.annualExtraCosts","Custos extras anuais","R$/ano"]]],
+["property.condoMonthly","Condomínio mensal","R$/mês"],["property.iptuMonthly","IPTU mensal equivalente","R$/mês"],["property.insuranceMonthly","Seguro residencial","R$/mês"],["property.maintenanceMonthly","Manutenção recorrente","R$/mês"],["property.annualExtraCosts","Custos extras anuais","R$/ano"],["property.initialMaintenanceReserve","Reserva inicial de manutenção","R$"],["property.maintenanceReserveMonthly","Aporte mensal à reserva","R$/mês"],["property.reserveAnnualReturn","Rendimento da reserva","% a.a."]]],
 ["4. Evolução do mercado imobiliário",[
 ["property.appreciationRealAnnual","Valorização real do mercado","% a.a."],["property.neighborhoodRealAnnual","Prêmio real do bairro","% a.a."],["property.propertyRealAnnual","Desgaste ou prêmio do imóvel","% a.a."]]],
 ["5. Aluguel equivalente",[

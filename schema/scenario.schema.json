@@ -84,6 +84,18 @@
               }
             }
           }
+        },
+        "initialMaintenanceReserve": {
+          "type": "number",
+          "minimum": 0
+        },
+        "maintenanceReserveMonthly": {
+          "type": "number",
+          "minimum": 0
+        },
+        "reserveAnnualReturn": {
+          "type": "number",
+          "exclusiveMinimum": -1
         }
       }
     },
@@ -180,6 +192,39 @@
       },
       "uniqueItems": true,
       "minItems": 1
+    },
+    "monthlyRates": {
+      "type": "object",
+      "properties": {
+        "inflation": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": -1
+          }
+        },
+        "investment": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": -1
+          }
+        },
+        "negativeCash": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": -1
+          }
+        },
+        "propertyExtra": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": -1
+          }
+        }
+      }
     }
   },
   "additionalProperties": true
