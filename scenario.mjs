@@ -84,4 +84,4 @@ function migrateScenario(raw){
 function serializeScenario(config){
   return JSON.stringify(migrateScenario(config),null,2)+"\n";
 }
-export {migrateScenario,serializeScenario};
+export {migrateScenario,serializeScenario,FIELDS,ROOT};

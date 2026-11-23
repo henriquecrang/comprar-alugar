@@ -28,6 +28,14 @@ try{
   await new Promise(resolve=>setTimeout(resolve,150));
   const imported=JSON.parse(localStorage.getItem("comprar-alugar-v1"));
   expect(imported.rent.monthly===alternative.rent.monthly,"Importação JSON atualiza o cenário");
+  const future=structuredClone(alternative);future.schemaVersion="999";
+  const failed=new DataTransfer();
+  failed.items.add(new File([JSON.stringify(future)],"invalido.json",{type:"application/json"}));
+  fileControl.files=failed.files;fileControl.dispatchEvent(new Event("change",{bubbles:true}));
+  await new Promise(resolve=>setTimeout(resolve,150));
+  expect(JSON.parse(localStorage.getItem("comprar-alugar-v1")).rent.monthly===alternative.rent.monthly,
+    "Importação de versão futura não sobrescreve cenário válido");
+  expect(document.querySelector("#toast").textContent.includes("não suportado"),"Erro de versão fica visível");
   let blob;
   const originalCreate=URL.createObjectURL;
   const originalClick=HTMLAnchorElement.prototype.click;

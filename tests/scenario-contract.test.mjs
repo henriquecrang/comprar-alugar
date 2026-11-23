@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
-import {migrateScenario,serializeScenario} from "../scenario.mjs";
+import {migrateScenario,serializeScenario,FIELDS,ROOT} from "../scenario.mjs";
 import {compare,project} from "../model-api.mjs";
 import {assessComparability} from "../comparability.mjs";
 
@@ -86,4 +86,10 @@ test("ledger tem identidade e indexação da dívida não passa pelo caixa",()=>
   assert.equal(indexed[0].amount,0);
   assert.equal(indexed[0].cashChange,0);
   assert.ok(indexed[0].debtChange>0);
+});
+
+test("catálogo de campos importados coincide com propriedades do JSON Schema",()=>{
+  assert.deepEqual([...ROOT].sort(),Object.keys(schema.properties).sort());
+  for(const [section,fields] of Object.entries(FIELDS))
+    assert.deepEqual(fields.slice().sort(),Object.keys(schema.properties[section].properties).sort(),"Divergência entre validador e schema em "+section);
 });
