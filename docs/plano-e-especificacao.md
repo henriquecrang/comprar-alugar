@@ -260,12 +260,12 @@ Hierarquia de evidência: (1) lei, norma e contrato aplicável; (2) documentaç�
 Requisitos já estabelecidos:
 - configuração independente dos cálculos, importação/exportação de **JSON versionado** e presets;
 - motor financeiro sem dependência de interface, ledger mensal e funções puras testáveis;
-- possibilidade de invocar o modelo por **`main.py`** (CLI/integração futura) e saída estruturada;
+- possibilidade de reutilizar o modelo via **`model-api.mjs`** e entradas/saídas JSON versionadas, inclusive em outros simuladores;
 - interface web com recálculo, simulação guiada, comparação e explicação;
 - uso local, reprodutibilidade, privacidade, testes de regressão e CI;
 - manter o fluxo issue → branch → PR → testes → revisão → merge para desenvolvimento posterior.
 
-**ADR pendente:** GitHub Pages hospeda arquivos estáticos, não executa Python no servidor. Antes de começar o motor, definir e provar uma das arquiteturas: Python canônico com UI usando Pyodide/WASM no navegador; Python com serviço/API separado; ou motor compartilhado com estratégia de paridade (evitar dois motores divergentes). Não declarar “GitHub Pages + `main.py`” funcional sem essa decisão. O CLI precisa consumir o mesmo schema e gerar resultados equivalentes à UI.
+**Decisão definitiva — [ADR-002](adr-002-static-js.md):** aplicação estática em HTML, CSS e JavaScript puro, com importação direta de módulos ES no navegador e publicação no GitHub Pages sem backend ou build. O motor canônico é `engine.mjs`, exportado por `model-api.mjs`; o CLI opcional `cli.mjs` usa o mesmo motor exclusivamente em desenvolvimento/CI. Não há Python no produto. O contrato JSON versionado permite integrações futuras, sem duplicação de fórmulas.
 
 Proposta de contrato lógico de entrada (ilustrativa, ainda **não** schema aprovado):
 ```json
@@ -286,7 +286,7 @@ Os identificadores `E01..E42` são chaves estáveis de backlog, independentes do
 
 | Código | Prioridade | Entrega | Dependências |
 | --- | --- | --- | --- |
-| E01 | P0 | ADR do motor Python e execução web | — |
+| E01 | P0 | ADR inicial de arquitetura (histórica; superada pela ADR-002) | — |
 | E02 | P0 | Estrutura inicial, governança GitHub Flow e CI | E01 |
 | E03 | P0 | Schema, dicionário tipado, migrações e validação | E01 |
 | E04 | P0 | Calibração das fontes e regras legais/tributárias | — |
@@ -314,7 +314,7 @@ Os identificadores `E01..E42` são chaves estáveis de backlog, independentes do
 | E26 | P2 | Painel comparativo de estratégias e indicadores | E22,E23 |
 | E27 | P2 | Gráficos e auditoria mensal dos fluxos | E22,E26 |
 | E28 | P2 | JSON import/export, migração, autosave e presets | E03,E23 |
-| E29 | P2 | `main.py` CLI/API de integração e paridade | E01,E22 |
+| E29 | P2 | CLI Python histórico (superado; substituído pela API JavaScript E46) | E01,E22 |
 | E30 | P2 | Pontos de equilíbrio por busca numérica | E22 |
 | E31 | P2 | Sensibilidade e cenários determinísticos | E22 |
 | E32 | P2 | Fixtures, regressão e auditoria financeira | E06..E22 |
@@ -338,7 +338,7 @@ Uma issue de interface só poderá ser concluída quando os dados utilizados for
 **Governança:** toda alteração relevante passa por branch e PR, validação de CI e revisão do diff; não declarar a branch protegida nem site publicado sem evidência. Configurações pessoais, dados cadastrais, endereços precisos e contratos privados não devem entrar no repositório público.
 
 ## 11. Decisões em aberto (não inventar defaults)
-1. Arquitetura Python/web e local de execução do motor (E01).
+1. Arquitetura definida na ADR-002: JavaScript puro, HTML/CSS estáticos e GitHub Pages; integração modular via E46.
 2. Tratamento de renda/despesa externa e retorno de investimentos tributado por prazo (E07/E21).
 3. Fonte do aluguel e comparabilidade de imóveis (E05).
 4. Preços transacionais versus anúncios; curvas de valorização e incerteza (E18/E04).
@@ -348,3 +348,5 @@ Uma issue de interface só poderá ser concluída quando os dados utilizados for
 8. Separação de custos de moradia, qualidade de vida e risco individual (E42).
 
 Este documento é o inventário e plano inicial, não aconselhamento financeiro, jurídico ou tributário.
+## 12. Atualização arquitetural — JS puro (23/11/2026)
+Decisão posterior ao planejamento inicial: [ADR-002](adr-002-static-js.md). O código de produção e toda lógica executável no navegador são JavaScript nativo. **Não usar Python, backend, bundler, transpiler ou build.** O arquivo `main.py` do PR #43 foi removido em E44; a entrega histórica E29 está superada. Node é usado somente em testes/CI e em CLI JS local opcional. Novas entregas: [E43 / #45](https://github.com/henriquecrang/comprar-alugar/issues/45), [E44 / #46](https://github.com/henriquecrang/comprar-alugar/issues/46), [E45 / #47](https://github.com/henriquecrang/comprar-alugar/issues/47) e [E46 / #48](https://github.com/henriquecrang/comprar-alugar/issues/48).

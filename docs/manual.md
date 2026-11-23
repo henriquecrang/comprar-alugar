@@ -1,7 +1,7 @@
 # Manual — Comprar ou Alugar (beta)
 
 ## Começando
-1. Inicie um servidor local com `python3 -m http.server 8080` e abra `http://localhost:8080`. Abertura direta do arquivo HTML pode falhar com ES modules por política de navegador.
+1. Acesse https://henriquecrang.github.io/comprar-alugar/ ou inicie um servidor local de desenvolvimento com `node tests/serve.mjs` e abra `http://localhost:8080/comprar-alugar/`. Abertura direta do arquivo HTML pode falhar com ES modules por política de navegador.
 2. Escolha estratégias, informe **o mesmo horizonte, riqueza inicial e renda externa comum**.
 3. Configure preço e avaliação de mercado do imóvel, aluguel equivalente, condomínio, IPTU, obras, juros, retornos alternativos, valorização e saída.
 4. A tela recalcula após alterar cada campo e salva a configuração **localmente**. Use Importar/Exportar JSON para transportar cenários.
@@ -30,6 +30,6 @@
 ## Validação
 ```bash
 npm test
-python3 main.py presets/rio-exemplo.json > resultado.json
+node cli.mjs presets/rio-exemplo.json > resultado.json
 ```
 A suite automatizada valida regras financeiras e o comando, mas não substitui QA em navegador real, inspeção de layouts ou conferência jurídica.

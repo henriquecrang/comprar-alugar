@@ -1,3 +1,5 @@
+> **SUPERADA por [ADR-002](adr-002-static-js.md).** Documento histórico: as instruções abaixo sobre Python e `main.py` não são aplicáveis à arquitetura atual.
+
 # ADR-001 — motor único, web estática e CLI Python
 
 **Data:** 23/11/2026. **Status:** decisão inicial reversível. **Issues:** #1, #3, #6, #29.

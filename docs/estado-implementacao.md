@@ -1,7 +1,7 @@
 # Estado de implementação e backlog — 23/11/2026
 
 ## Entregue e integrado
-- [PR #43](https://github.com/henriquecrang/comprar-alugar/pull/43) integrado à main, contendo motor econômico, CLI Python/Node, UI estática responsiva, comparativo de cinco estratégias, entrada/saída JSON, CSV, gráficos, análise de sensibilidade e testes.
+- [PR #43](https://github.com/henriquecrang/comprar-alugar/pull/43) integrado à main, contendo motor econômico JS, antigo wrapper Python posteriormente retirado, UI estática responsiva, comparativo de cinco estratégias, entrada/saída JSON, CSV, gráficos, análise de sensibilidade e testes.
 - CI da `main` aprovado: [execução de testes](https://github.com/henriquecrang/comprar-alugar/actions/runs/45196710259).
 - Deploy Pages reportado com sucesso: [execução de publicação](https://github.com/henriquecrang/comprar-alugar/actions/runs/45196710257).
 - Auditada a identidade patrimonial em 100 cenários sintéticos adicionais; não houve inconsistência numérica detectada nesse teste.
@@ -31,4 +31,7 @@ Os demais itens #3–#42 (exceto os oito encerrados) permanecem **abertos**, inc
 5. **#36–#42** — módulos avançados.
 
 ## Nota
-`main.py` depende de Node.js 22+, por escolha arquitetural documentada. O simulador não substitui cálculo oficial de imposto (GCAP), instrumento bancário ou regulamento de consórcio. A paginação dos relatórios, o fluxo de eventos mensais e o valor residual de melhorias merecem revisão contínua.
+**Atualização de arquitetura:** a ADR-002 substitui o wrapper Python pela API JavaScript nativa; a issue histórica #29 foi superada. Node.js 22+ fica apenas em CLI de desenvolvimento e CI. O simulador não substitui cálculo oficial de imposto (GCAP), instrumento bancário ou regulamento de consórcio. A paginação dos relatórios, o fluxo de eventos mensais e o valor residual de melhorias merecem revisão contínua.
+
+## Refatoração para JS puro — issues #45–#48
+A arquitetura vigente foi definida na [ADR-002](adr-002-static-js.md): aplicação estática sem Python, backend ou build para o navegador. O CLI Node é opcional, e os testes automatizados verificam o mesmo motor usado na interface. As instruções históricas acima identificam o estado do PR #43 e não reintroduzem requisitos Python. Consulte #45–#48 para evidências e critérios de aceite.

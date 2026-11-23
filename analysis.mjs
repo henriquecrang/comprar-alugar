@@ -1,4 +1,4 @@
-import {compare,project} from "./engine.mjs";
+import {compare,project} from "./model-api.mjs";
 function copy(obj){return JSON.parse(JSON.stringify(obj));}
 function change(input,path,value){
   const o=copy(input),parts=path.split(".");let curr=o;

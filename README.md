@@ -2,18 +2,21 @@
 
 **Versão beta de um simulador aberto para comparar aluguel residencial com compra à vista, financiamento, parcelamento direto ou carta contemplada de consórcio.** Considera patrimônio líquido mensal, renda financeira alternativa, necessidade de caixa, manutenção, valorização, dívida e resultado após venda/manutenção.
 
-## Rodar localmente
-Requer **Node.js 22+** para testes/CLI e um servidor HTTP estático para a interface.
+## Executar no navegador
+
+**[Abrir o simulador no GitHub Pages](https://henriquecrang.github.io/comprar-alugar/)**. A aplicação usa **HTML, CSS e JavaScript puro**, sem backend, Python, Node.js, framework, bundler ou build na produção.
+
+Para desenvolver e testar localmente (Node.js 22+ **somente para desenvolvimento**):
 
 ```bash
-python3 -m http.server 8080
-# depois abrir http://localhost:8080/
+node tests/serve.mjs
+# abrir http://localhost:8080/comprar-alugar/
 npm test
 node cli.mjs presets/rio-exemplo.json > resultado.json
-python3 main.py presets/rio-exemplo.json > resultado-pelo-python.json
+npm run smoke          # requer Chrome/Chromium instalado
 ```
 
-A interface é JavaScript sem backend. O `main.py` chama o motor JavaScript pelo Node — **não** existe cópia Python das fórmulas. Veja [ADR-001](docs/adr-001-arquitetura.md).
+O motor financeiro canônico é o módulo ES `engine.mjs`, exposto pela API pública `model-api.mjs`; o CLI `cli.mjs` é uma ferramenta opcional de desenvolvimento. Veja [ADR-002](docs/adr-002-static-js.md).
 
 ## O que já funciona
 - Cinco alternativas: aluguel, à vista, financiamento SAC/Price, parcelamento direto simplificado, carta contemplada simplificada.
@@ -31,7 +34,8 @@ A interface é JavaScript sem backend. O `main.py` chama o motor JavaScript pelo
 ## Documentação e backlog
 - **[Pesquisa, inventário de variáveis e roadmap](docs/plano-e-especificacao.md)** — especificação inicial e 42 entregas.
 - **[Issues abertas e encerradas](https://github.com/henriquecrang/comprar-alugar/issues?q=)** — execução verificável.
-- [ADR da arquitetura](docs/adr-001-arquitetura.md)
+- [ADR-002 — arquitetura JS puro e estático](docs/adr-002-static-js.md)
+- [API pública JavaScript](docs/api-js.md)
 - [Fontes e limites jurídicos](docs/fontes-juridicas.md)
 - [Workflow de desenvolvimento](docs/workflow-desenvolvimento.md)
 - [Manual de uso](docs/manual.md)

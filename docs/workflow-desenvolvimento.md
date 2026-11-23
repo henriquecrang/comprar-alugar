@@ -9,5 +9,5 @@ Este repositório adota o padrão dos projetos `custo-veiculo` e `cenarios-conso
 5. Cálculo só é aceito quando tabela de eventos e indicadores reconciliam e casos-limite possuem testes. UI precisa usar **apenas** os resultados do motor.
 6. Datas, alíquotas, índice de juros e cláusulas são dados editáveis; contratos e leis aplicáveis prevalecem sobre presets. O software não presume validade jurídica do resultado.
 7. Não registrar CPF, renda privada individual, documentos, endereços de residência ou credenciais no repositório público.
-8. GitHub Pages não executa backend Python. Ver [ADR-001](adr-001-arquitetura.md).
+8. Produção exclusiva HTML, CSS e JavaScript nativos, sem backend, bundler ou compilação. Ver [ADR-002](adr-002-static-js.md). Node é permitido somente nos testes/CI/dev.
 9. Proteção de branch é uma política do GitHub a ser configurada separadamente; instruções em arquivo não significam proteção habilitada.

@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "test": "node --test",
-    "simulate": "node cli.mjs presets/rio-exemplo.json"
+    "simulate": "node cli.mjs presets/rio-exemplo.json",
+    "dev": "node tests/serve.mjs",
+    "smoke": "node tests/browser-smoke.mjs"
   },
   "engines": {
     "node": ">=22"
