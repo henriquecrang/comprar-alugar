@@ -72,6 +72,9 @@ function validate(config) {
     if(l.extraPayments!==undefined&&(!Array.isArray(l.extraPayments)||l.extraPayments.some(x=>!Number.isInteger(x.month)||x.month<1||x.month>months||!Number.isFinite(x.amount)||x.amount<0)))throw new Error("Amortizações extraordinárias inválidas");
   }
   if(config.strategies!==undefined&&(!Array.isArray(config.strategies)||config.strategies.length<1||new Set(config.strategies).size!==config.strategies.length||config.strategies.some(x=>!["rent","cash","mortgage","seller","consortium"].includes(x))))throw new Error("Lista de estratégias inválida");
+  for(const kind of ["mortgage","seller","consortium"]){
+    if(config.strategies?.includes(kind)&&!config[kind])throw new Error("Modalidade selecionada sem condições explícitas: "+kind);
+  }
   const overrides=config.strategyOverrides;
   if(overrides!==undefined){
     if(!overrides||typeof overrides!=="object"||Array.isArray(overrides))throw new Error("Overrides por estratégia inválidos");
@@ -93,6 +96,8 @@ function validate(config) {
           if(["discountRate","commissionRate","capitalGainsTaxRate"].includes(name)&&val>1)throw new Error("Taxa de override maior que 100%");
         }
       }
+      const finalSale={...(s||{}),...(sections.sale||{})};
+      if(num(finalSale,"discountRate",0)+num(finalSale,"commissionRate",0)>=1)throw new Error("Desconto + corretagem do cenário não podem chegar a 100%");
     }
   }
   const eqv=config.housingEquivalence;
@@ -165,9 +170,7 @@ function project(config, kind) {
   const seller={...(config.seller||{}),...(override.seller||{})};
   const cons={...(config.consortium||{}),...(override.consortium||{})};
   const sale={...(config.sale||{}),...(override.sale||{})};
-  const annualGrowth=(1+num(config,"inflationAnnual"))*(1+num(p,"appreciationRealAnnual"))*(1+num(p,"neighborhoodRealAnnual"))*(1+num(p,"propertyRealAnnual"))-1;
-  const growth=rateMonthly(annualGrowth), interest=rateMonthly(num(config,"investmentAnnualNet")), overdraft=rateMonthly(num(config,"negativeCashAnnualRate",0.18));
-  const inflation=rateMonthly(num(config,"inflationAnnual"));
+  // Inflação e preços são acumulados mês a mês; não aplicar índices anuais duas vezes.
   const isOwner=kind!=="rent",cashStart=num(config,"initialCash"),inflow=num(config,"monthlyContribution");
   let cumulativeInflation=1;
   const state={cash:cashStart,property:0,debt:0,deposit:0,reserve:0,marketBasis:0,taxBasis:0,loanMonth:0,principal:0,rate:0,originalMonths:0,originalPayment:0,system:"price"};
@@ -333,7 +336,7 @@ function project(config, kind) {
 
 function compare(config) {
   validate(config);
-  const kinds=Array.isArray(config.strategies)&&config.strategies.length?config.strategies:["rent","cash","mortgage"];
+  const kinds=Array.isArray(config.strategies)&&config.strategies.length?config.strategies:["rent","cash"];
   const out=kinds.map(kind=>project(config,kind)).sort((a,b)=>b.summary.netWorthReal-a.summary.netWorthReal);
   return {engineVersion:"0.2.0",schemaVersion:"1.0",parameters:config,horizonMonths:config.months,baselineFuture:baseline(config),results:out,leader:out[0]?.kind,alerts:assessComparability(config)};
 }
