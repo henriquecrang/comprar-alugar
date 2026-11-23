@@ -26,7 +26,7 @@ A interface é JavaScript sem backend. O `main.py` chama o motor JavaScript pelo
 ## Limitações importantes
 **Não está pronto para decisões contratuais sem conferência.** CET, indexadores reais de contratos, taxas bancárias, parcelamento na planta/INCC, regras complexas de consórcio, IR com fatores de redução e isenção de reinvestimento, obras estruturais e risco geográfico ainda precisam de desenvolvimento. O simulador não coleta cotações automaticamente. Avaliação de mercado e custo fiscal não são a mesma coisa. Importações devem ser revisadas.
 
-Não há QA realizado em navegador real nesta rodada nem publicação GitHub Pages confirmada; configurar Pages e testar interface são pendências explícitas.
+**GitHub Actions confirmou a implantação no Pages em 23/11/2026**: https://henriquecrang.github.io/comprar-alugar/. Ainda faltam inspeção HTTP independente, QA em navegador real, avaliação visual/mobile e auditoria contratual; ver issues #33 e #34.
 
 ## Documentação e backlog
 - **[Pesquisa, inventário de variáveis e roadmap](docs/plano-e-especificacao.md)** — especificação inicial e 42 entregas.
@@ -35,6 +35,7 @@ Não há QA realizado em navegador real nesta rodada nem publicação GitHub Pag
 - [Fontes e limites jurídicos](docs/fontes-juridicas.md)
 - [Workflow de desenvolvimento](docs/workflow-desenvolvimento.md)
 - [Manual de uso](docs/manual.md)
+- [Estado de implementação e pendências](docs/estado-implementacao.md)
 
 Referências conceituais: [custo-veiculo](https://github.com/henriquecrang/custo-veiculo), [cenarios-consorcio](https://github.com/henriquecrang/cenarios-consorcio), [viabilidade-airbnb](https://github.com/henriquecrang/viabilidade-airbnb).
 
