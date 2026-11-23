@@ -5,11 +5,11 @@ const defaults = {
   "schemaVersion":"1.0","months":60,"initialCash":750000,"monthlyContribution":8000,
   "minimumReserve":25000,"inflationAnnual":.045,"investmentAnnualNet":.09,"negativeCashAnnualRate":.18,
   "property":{"price":600000,"marketValue":600000,"acquisitionRate":.03,"acquisitionFixed":12000,"initialRenovation":10000,"initialRenovationValueRate":.4,"condoMonthly":1100,"iptuMonthly":300,"insuranceMonthly":80,"maintenanceMonthly":250,"annualExtraCosts":1000,"appreciationRealAnnual":.01,"neighborhoodRealAnnual":0,"propertyRealAnnual":-.005},
-  "rent":{"monthly":3500,"annualIncrease":.045,"condoMonthly":1100,"iptuMonthly":300,"deposit":10500,"upfrontCosts":1800,"prepaid":false},
+  "rent":{"monthly":3500,"annualIncrease":.045,"condoMonthly":1100,"iptuMonthly":300,"deposit":10500,"upfrontCosts":1800,"prepaid":false,"penaltyMode":"manual","contractMonths":30,"contractPenaltyMonths":3,"depositAnnualReturn":0},
   "mortgage":{"downPayment":180000,"months":360,"system":"sac","annualInterestRate":.115,"annualIndexRate":0,"insuranceMonthly":160,"fees":4000},
   "seller":{"downPayment":180000,"months":96,"annualInterestRate":.11,"annualCorrectionRate":.045,"fees":6000},
   "consortium":{"credit":510000,"shareAcquisitionPrice":80000,"remainingDebt":410000,"months":120,"annualIndexRate":.045,"monthlyOtherCharges":250,"transferFee":3000},
-  "sale":{"sellAtEnd":true,"discountRate":.03,"commissionRate":.05,"fixedCosts":2500,"capitalGainsTaxRate":0},
+  "sale":{"sellAtEnd":true,"discountRate":.03,"commissionRate":.05,"fixedCosts":2500,"capitalGainsTaxRate":0,"taxPolicy":"manual","onlyProperty":false,"noSalePast5Years":false},
   "strategies":["rent","cash","mortgage","seller","consortium"]
 };
 const names={rent:"Alugar",cash:"Comprar à vista",mortgage:"Financiar",seller:"Parcelar diretamente",consortium:"Carta contemplada"};
@@ -24,7 +24,7 @@ const form=[
 ["4. Evolução do mercado imobiliário",[
 ["property.appreciationRealAnnual","Valorização real do mercado","% a.a."],["property.neighborhoodRealAnnual","Prêmio real do bairro","% a.a."],["property.propertyRealAnnual","Desgaste ou prêmio do imóvel","% a.a."]]],
 ["5. Aluguel equivalente",[
-["rent.monthly","Aluguel atual","R$/mês"],["rent.annualIncrease","Reajuste contratual anual","% a.a."],["rent.condoMonthly","Condomínio pago por inquilino","R$/mês"],["rent.iptuMonthly","IPTU pago por inquilino","R$/mês"],["rent.insuranceMonthly","Seguro pago por inquilino","R$/mês"],["rent.maintenanceMonthly","Reparos do inquilino","R$/mês"],["rent.deposit","Caução recuperável","R$"],["rent.upfrontCosts","Despesas iniciais de locação","R$"],["rent.exitCosts","Saída e vistoria","R$"],["rent.earlyExitPenalty","Multa prevista na saída","R$"],["rent.prepaid","Aluguel antecipado","sim/não"]]],
+["rent.monthly","Aluguel atual","R$/mês"],["rent.annualIncrease","Reajuste contratual anual","% a.a."],["rent.condoMonthly","Condomínio pago por inquilino","R$/mês"],["rent.iptuMonthly","IPTU pago por inquilino","R$/mês"],["rent.insuranceMonthly","Seguro pago por inquilino","R$/mês"],["rent.maintenanceMonthly","Reparos do inquilino","R$/mês"],["rent.deposit","Caução recuperável","R$"],["rent.upfrontCosts","Despesas iniciais de locação","R$"],["rent.exitCosts","Saída e vistoria","R$"],["rent.earlyExitPenalty","Multa manual de saída","R$"],["rent.penaltyMode","Modo de multa","manual/proporcional"],["rent.contractMonths","Prazo contratual","meses",1,600],["rent.contractPenaltyMonths","Multa integral de referência","meses",0,24],["rent.depositAnnualReturn","Rendimento da caução","% a.a."],["rent.prepaid","Aluguel antecipado","sim/não"]]],
 ["6. Financiamento bancário",[
 ["mortgage.downPayment","Entrada","R$"],["mortgage.months","Prazo","meses",1,600],["mortgage.system","Sistema de amortização","SAC/Price"],["mortgage.annualInterestRate","Juros anuais efetivos","% a.a."],["mortgage.annualIndexRate","Reajuste anual do saldo (aproximação)","% a.a."],["mortgage.insuranceMonthly","Seguros mensais informados","R$/mês"],["mortgage.fees","Despesas iniciais bancárias","R$"]]],
 ["7. Parcelamento direto",[
@@ -32,7 +32,7 @@ const form=[
 ["8. Carta contemplada",[
 ["consortium.credit","Crédito liberado para aquisição","R$"],["consortium.shareAcquisitionPrice","Preço de aquisição da cota","R$"],["consortium.remainingDebt","Saldo contratual restante","R$"],["consortium.months","Prazo residual","meses",1,600],["consortium.annualIndexRate","Correção anual do saldo","% a.a."],["consortium.monthlyOtherCharges","Encargos extras mensais","R$/mês"],["consortium.transferFee","Custos de cessão/transferência","R$"]]],
 ["9. Venda ou manutenção do imóvel",[
-["sale.sellAtEnd","Vender no fim do horizonte","sim/não"],["sale.discountRate","Desconto na negociação","%"],["sale.commissionRate","Comissão de corretagem","%"],["sale.fixedCosts","Outras despesas da venda","R$"],["sale.capitalGainsTaxRate","Alíquota efetiva hipotética do ganho","%"]]]
+["sale.sellAtEnd","Vender no fim do horizonte","sim/não"],["sale.discountRate","Desconto na negociação","%"],["sale.commissionRate","Comissão de corretagem","%"],["sale.fixedCosts","Outras despesas da venda","R$"],["sale.capitalGainsTaxRate","Alíquota efetiva hipotética do ganho","%"],["sale.taxPolicy","Regra de tributação","manual/progressivo"],["sale.onlyProperty","Declara ser seu único imóvel","sim/não"],["sale.noSalePast5Years","Declara não ter vendido imóvel em cinco anos","sim/não"]]]
 ];
 let data,report;
 const $=sel=>document.querySelector(sel);
@@ -61,14 +61,19 @@ function buildForm(){
       const l=document.createElement("label");l.textContent=label;l.htmlFor="f-"+path.replaceAll(".","-");
       const input=document.createElement("input");input.id=l.htmlFor;input.dataset.path=path;
       const val=at(path);let select;
-      if(unit==="SAC/Price"){
+      if(unit==="manual/proporcional"||unit==="manual/progressivo"){
+        select=document.createElement("select");select.id=input.id;select.dataset.path=path;
+        const choices=unit==="manual/proporcional"?[["manual","Manual"],["proportional","Proporcional"]]:[["manual","Manual"],["progressive","Progressivo (Brasil)"]];
+        for(const [v,name] of choices){const o=document.createElement("option");o.value=v;o.textContent=name;select.append(o)}
+        select.value=val||"manual";
+      }else if(unit==="SAC/Price"){
         select=document.createElement("select");select.id=input.id;select.dataset.path=path;
         for(const opt of ["sac","price"]){const o=document.createElement("option");o.value=opt;o.textContent=opt.toUpperCase();select.append(o)}select.value=val||"sac";
       }else if(unit==="sim/não"){input.type="checkbox";input.checked=!!val;}
       else{input.type="number";input.step="any";if(min!==undefined)input.min=String(min);if(max!==undefined)input.max=String(max);input.value=String(unit.startsWith("%")?(Number(val||0)*100):Number(val||0));}
       const control=select||input;
       control.addEventListener("change",()=>{
-        let value=unit==="sim/não"?input.checked:unit==="SAC/Price"?select.value:Number(input.value);
+        let value=unit==="sim/não"?input.checked:select?select.value:Number(input.value);
         if(unit.startsWith("%"))value/=100;
         if(typeof value==="number"&&!Number.isFinite(value)){toast("Número inválido");return}
         put(path,value);run();

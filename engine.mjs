@@ -24,6 +24,9 @@ function validate(config) {
   const p=config.property||{},r=config.rent||{},s=config.sale||{};
   if(num(p,"price",0)<=0) throw new Error("Preço do imóvel deve ser positivo");
   if(num(r,"monthly",0)<0) throw new Error("Aluguel não pode ser negativo");
+  rateMonthly(num(r,"annualIncrease",0));
+  if(num(r,"deposit",0)<0)throw new Error("Caução não pode ser negativa");
+  rateMonthly(num(r,"depositAnnualReturn",0));
   if(num(s,"discountRate",0)<0||num(s,"commissionRate",0)<0||num(s,"discountRate",0)+num(s,"commissionRate",0)>=1) throw new Error("Taxas de venda inválidas");
   ["investmentAnnualNet","inflationAnnual","negativeCashAnnualRate"].forEach(k=>rateMonthly(num(config,k,k==="negativeCashAnnualRate"?0.18:0)));
   ["appreciationRealAnnual","neighborhoodRealAnnual","propertyRealAnnual"].forEach(k=>rateMonthly(num(p,k,0)));
@@ -37,6 +40,23 @@ function baseline(config) {
   let v=num(config,"initialCash"),r=rateMonthly(num(config,"investmentAnnualNet",0)),b=rateMonthly(num(config,"negativeCashAnnualRate",0.18));
   for(let m=1;m<=num(config,"months",60);m++)v=v*(1+(v>=0?r:b))+num(config,"monthlyContribution",0);
   return v;
+}
+
+function progressiveCapitalGainsTax(gain) {
+  let remaining=Math.max(0,gain),tax=0;
+  const brackets=[[5000000,.15],[5000000,.175],[20000000,.20],[Infinity,.225]];
+  for(const [width,rate] of brackets){
+    const slice=Math.min(width,remaining);tax+=slice*rate;remaining-=slice;
+    if(remaining<=0)break;
+  }
+  return tax;
+}
+function rentalEarlyExitPenalty(rent,horizon) {
+  if(rent.penaltyMode!=="proportional")return num(rent,"earlyExitPenalty",0);
+  const months=num(rent,"contractMonths",horizon),fullPenaltyMonths=num(rent,"contractPenaltyMonths",3);
+  if(!Number.isInteger(months)||months<=0)throw new Error("Prazo de contrato de aluguel inválido");
+  if(fullPenaltyMonths<0)throw new Error("Multa contratual inválida");
+  return num(rent,"monthly")*fullPenaltyMonths*Math.max(0,months-horizon)/months;
 }
 
 function project(config, kind) {
@@ -59,6 +79,7 @@ function project(config, kind) {
   const taxFee=num(p,"acquisitionFixed",0)+price*num(p,"acquisitionRate",0);
   for(let m=0;m<=N;m++){
     if(m>0){
+      if(kind==="rent" && state.deposit>0)state.deposit*=1+rateMonthly(num(r,"depositAnnualReturn",0));
       note(m,state.cash>=0?"investment-return":"funding-interest",state.cash*(state.cash>=0?interest:overdraft),"Rendimento líquido ou custo de cobertura do caixa");
       note(m,"income",inflow,"Aporte externo comum a todas as estratégias");
     }
@@ -151,17 +172,22 @@ function project(config, kind) {
     if(m===N && isOwner && sale.sellAtEnd!==false){
       const sold=state.property*(1-num(sale,"discountRate",0)-num(sale,"commissionRate",0))-num(sale,"fixedCosts",0);
       const gain=Math.max(0,sold-state.taxBasis);
-      const gainTax=num(sale,"capitalGainsTaxRate",0)*gain;
+      const qualifiesOnlyHome=sale.onlyProperty===true && sale.noSalePast5Years===true && sold<=440000;
+      const gainTax=qualifiesOnlyHome?0:
+        sale.taxPolicy==="progressive"?progressiveCapitalGainsTax(gain):
+        num(sale,"capitalGainsTaxRate",0)*gain;
       note(m,"sale",sold,"Receita de venda líquida de corretagem e descontos");
       note(m,"capital-gains-tax",-gainTax,"Tributo hipotético parametrizado; verificar isenções");
       if(state.debt>0){note(m,"debt-payoff",-state.debt,"Quitação das obrigações na alienação");state.debt=0;}
       state.property=0;
-      if(num(sale,"capitalGainsTaxRate",0)===0)warnings.push("IR de ganho de capital não parametrizado: valor zero não confirma isenção.");
+      if(qualifiesOnlyHome)warnings.push("Isenção de único imóvel (até R$ 440 mil) simulada com declarações do usuário; validar condições legais.");
+      else if(sale.taxPolicy!=="progressive"&&num(sale,"capitalGainsTaxRate",0)===0)warnings.push("IR de ganho de capital não parametrizado: valor zero não confirma isenção.");
+      else if(sale.taxPolicy==="progressive")warnings.push("IR progressivo ilustrativo: fatores legais de redução, reinvestimento em 180 dias e demais isenções não estão automatizados.");
     }
     if(m===N && kind==="rent"){
       note(m,"deposit-return",state.deposit*(1+num(r,"depositReturnRate",0)),"Restituição da caução");
       state.deposit=0;
-      note(m,"rent-exit",-num(r,"exitCosts",0)-num(r,"earlyExitPenalty",0),"Custos e multa de saída informados");
+      note(m,"rent-exit",-num(r,"exitCosts",0)-rentalEarlyExitPenalty(r,N),"Custos e multa de saída informados");
     }
     months.push({month:m,cash:state.cash,property:state.property,debt:state.debt,deposit:state.deposit,netWorth:state.cash+state.property+state.deposit-state.debt,realNetWorth:(state.cash+state.property+state.deposit-state.debt)/Math.pow(1+inflation,m),shortfall:Math.max(0,num(config,"minimumReserve",0)-state.cash)});
   }
@@ -179,4 +205,4 @@ function compare(config) {
   return {engineVersion:"0.1.0",schemaVersion:"1.0",parameters:config,horizonMonths:config.months,baselineFuture:baseline(config),results:out,leader:out[0]?.kind,alerts:[]};
 }
 
-export {num, rateMonthly, payment, validate, baseline, project, compare};
+export {num, rateMonthly, payment, validate, baseline, project, compare, progressiveCapitalGainsTax, rentalEarlyExitPenalty};
