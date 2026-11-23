@@ -1,4 +1,5 @@
 import {compare} from "./engine.mjs";
+import {sweep,breakEven,firstWinningMonth} from "./analysis.mjs";
 
 const defaults = {
   "schemaVersion":"1.0","months":60,"initialCash":750000,"monthlyContribution":8000,
@@ -114,7 +115,7 @@ function render(){
   const sel=$("#detail-strategy"),old=sel.value;sel.replaceChildren();
   for(const x of results){const opt=document.createElement("option");opt.value=x.kind;opt.textContent=names[x.kind];sel.append(opt)}
   if(results.some(x=>x.kind===old))sel.value=old;
-  details();chart(results);
+  details();chart(results);renderSensitivity();
   const warn=$("#warnings");warn.replaceChildren();
   const notices=[
     "Os rendimentos, impostos, reajustes e valores de revenda são hipóteses do usuário — não projeções oficiais.",
@@ -137,6 +138,33 @@ function run(){
     $("#warnings-panel").classList.remove("error");
   }catch(error){$("#warnings-panel").classList.add("error");toast(error.message);$("#winner").textContent="Corrigir premissas";$("#comparison-body").replaceChildren();}
 }
+
+function renderSensitivity(){
+  const host=$("#sensitivity-results");if(!host||!report)return;
+  host.replaceChildren();
+  const selections=[["Aluguel inicial","rent.monthly",[.8,1,1.2],brl],["Valorização real do mercado","property.appreciationRealAnnual",[-.02,0,.02],v=>(v*100).toFixed(1)+"% a.a."],["Retorno financeiro","investmentAnnualNet",[-.02,0,.02],v=>(v*100).toFixed(1)+"% a.a."]];
+  for(const [title,path,factors,fmt] of selections){
+    const base=path.split(".").reduce((v,key)=>v?.[key],data);
+    const values=factors.map(x=>path==="rent.monthly"?base*x:base+x);
+    const r=sweep(data,path,values,"cash","rent");
+    const card=document.createElement("div");card.className="scenario-card";
+    const label=document.createElement("h3");label.textContent=title;card.append(label);
+    for(let i=0;i<3;i++){
+      const item=document.createElement("div");item.className="sensitivity-line";
+      const a=document.createElement("span");a.textContent=fmt(values[i]);
+      const b=document.createElement("strong");b.textContent=(r[i].difference>=0?"+":"−")+" "+brl(Math.abs(r[i].difference));
+      item.append(a,b);card.append(item);
+    }
+    const foot=document.createElement("small");foot.textContent="Vantagem de comprar à vista sobre alugar (patrimônio real)";card.append(foot);
+    host.append(card);
+  }
+  const eq=breakEven(data,"rent.monthly","cash","rent",0,Math.max(data.rent.monthly*5,1000));
+  $("#rent-break-even").textContent=eq.value===null?"Sem empate na faixa pesquisada":brl(eq.value)+"/mês";
+  // O equilíbrio pode mudar de sinal mais de uma vez ao longo do tempo: exibir apenas um primeiro cruzamento.
+  const horizon=firstWinningMonth(data,"cash","rent",Math.min(240,Math.max(data.months,24)));
+  $("#first-win").textContent=horizon.firstMonth===null?"Não encontrado":horizon.firstMonth+" meses";
+}
+
 function download(filename,content,type){const blob=new Blob([content],{type}),url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 $("#export").addEventListener("click",()=>download("comprar-alugar.json",JSON.stringify(data,null,2),"application/json"));
 $("#reset").addEventListener("click",()=>{data=deep(defaults);buildForm();run();toast("Cenário de exemplo restaurado")});
