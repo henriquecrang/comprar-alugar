@@ -1,3 +1,4 @@
+import {assessComparability} from "./comparability.mjs";
 function num(object,key,fallback=0) {
   const v=object && object[key]!==undefined?object[key]:fallback;
   if(typeof v!=="number" || !Number.isFinite(v)) throw new Error("Parâmetro numérico inválido: "+key);
@@ -71,6 +72,39 @@ function validate(config) {
     if(l.extraPayments!==undefined&&(!Array.isArray(l.extraPayments)||l.extraPayments.some(x=>!Number.isInteger(x.month)||x.month<1||x.month>months||!Number.isFinite(x.amount)||x.amount<0)))throw new Error("Amortizações extraordinárias inválidas");
   }
   if(config.strategies!==undefined&&(!Array.isArray(config.strategies)||config.strategies.length<1||new Set(config.strategies).size!==config.strategies.length||config.strategies.some(x=>!["rent","cash","mortgage","seller","consortium"].includes(x))))throw new Error("Lista de estratégias inválida");
+  const overrides=config.strategyOverrides;
+  if(overrides!==undefined){
+    if(!overrides||typeof overrides!=="object"||Array.isArray(overrides))throw new Error("Overrides por estratégia inválidos");
+    const allowed={
+      property:["marketValue","condoMonthly","iptuMonthly","insuranceMonthly","maintenanceMonthly","annualExtraCosts","appreciationRealAnnual","neighborhoodRealAnnual","propertyRealAnnual","initialMaintenanceReserve","maintenanceReserveMonthly","reserveAnnualReturn"],
+      rent:["monthly","annualIncrease","condoMonthly","iptuMonthly","insuranceMonthly","maintenanceMonthly","deposit","upfrontCosts","earlyExitPenalty","exitCosts","depositAnnualReturn"],
+      mortgage:["insuranceMonthly","fees","annualInterestRate","annualIndexRate"],
+      seller:["annualInterestRate","annualCorrectionRate","fees"],
+      consortium:["monthlyOtherCharges","annualIndexRate","transferFee"],
+      sale:["discountRate","commissionRate","fixedCosts","capitalGainsTaxRate"]
+    };
+    for(const [kind,sections] of Object.entries(overrides)){
+      if(!["rent","cash","mortgage","seller","consortium"].includes(kind)||!sections||typeof sections!=="object"||Array.isArray(sections))throw new Error("Override de modalidade inválido: "+kind);
+      for(const [section,fields] of Object.entries(sections)){
+        if(!allowed[section]||!fields||typeof fields!=="object"||Array.isArray(fields))throw new Error("Seção de override inválida: "+section);
+        if(section!=="property"&&section!=="sale"&&section!==(kind==="cash"?"":kind))throw new Error("Override não se aplica à modalidade "+kind+": "+section);
+        for(const [name,val] of Object.entries(fields)){
+          if(!allowed[section].includes(name)||typeof val!=="number"||!Number.isFinite(val)||(["annualInterestRate","annualCorrectionRate","annualIndexRate","appreciationRealAnnual","neighborhoodRealAnnual","propertyRealAnnual","reserveAnnualReturn","annualIncrease","depositAnnualReturn"].includes(name)?val<=-1:val<0))throw new Error("Override fora dos limites: "+kind+"."+section+"."+name);
+          if(["discountRate","commissionRate","capitalGainsTaxRate"].includes(name)&&val>1)throw new Error("Taxa de override maior que 100%");
+        }
+      }
+    }
+  }
+  const eqv=config.housingEquivalence;
+  if(eqv!==undefined){
+    if(!eqv||typeof eqv!=="object"||Array.isArray(eqv))throw new Error("Equivalência habitacional inválida");
+    for(const mode of ["buy","rent"])if(eqv[mode]!==undefined){
+      const h=eqv[mode];
+      if(!h||typeof h!=="object"||Array.isArray(h))throw new Error("Habitação inválida: "+mode);
+      for(const key of ["areaSqm","bedrooms"])if(h[key]!==undefined&&(!Number.isFinite(h[key])||h[key]<0||(key==="bedrooms"&&!Number.isInteger(h[key]))))throw new Error("Parâmetro de equivalência inválido: "+key);
+      for(const key of ["neighborhood","housingType"])if(h[key]!==undefined&&typeof h[key]!=="string")throw new Error("Descrição de equivalência inválida");
+    }
+  }
   return true;
 }
 
@@ -123,7 +157,14 @@ function rentalEarlyExitPenalty(rent,horizon) {
 function project(config, kind) {
   validate(config);
   if(!["rent","cash","mortgage","seller","consortium"].includes(kind))throw new Error("Estratégia desconhecida: "+kind);
-  const N=num(config,"months",60),price=num(config.property,"price"),p=config.property||{},r=config.rent||{},loan=config.mortgage||{},seller=config.seller||{},cons=config.consortium||{},sale=config.sale||{};
+  const N=num(config,"months",60),price=num(config.property,"price");
+  const override=config.strategyOverrides?.[kind]||{};
+  const p={...(config.property||{}),...(override.property||{})};
+  const r={...(config.rent||{}),...(override.rent||{})};
+  const loan={...(config.mortgage||{}),...(override.mortgage||{})};
+  const seller={...(config.seller||{}),...(override.seller||{})};
+  const cons={...(config.consortium||{}),...(override.consortium||{})};
+  const sale={...(config.sale||{}),...(override.sale||{})};
   const annualGrowth=(1+num(config,"inflationAnnual"))*(1+num(p,"appreciationRealAnnual"))*(1+num(p,"neighborhoodRealAnnual"))*(1+num(p,"propertyRealAnnual"))-1;
   const growth=rateMonthly(annualGrowth), interest=rateMonthly(num(config,"investmentAnnualNet")), overdraft=rateMonthly(num(config,"negativeCashAnnualRate",0.18));
   const inflation=rateMonthly(num(config,"inflationAnnual"));
@@ -135,7 +176,7 @@ function project(config, kind) {
     if(!Number.isFinite(amount))throw new Error("Lançamento inválido: "+type);
     if(Math.abs(amount)<0.0000001)return;
     state.cash+=amount;
-    ledger.push({month:m,category:type,amount,description:description||type});
+    ledger.push({id:kind+":"+m+":"+ledger.length,month:m,category:type,amount,description:description||type,source:"model",cashChange:amount});
   };
   const costEntry=num(p,"acquisitionFixed",0)+price*num(p,"acquisitionRate",0)+num(p,"initialRenovation",0)+num(p,"initialFurnishing",0);
   const taxFee=num(p,"acquisitionFixed",0)+price*num(p,"acquisitionRate",0);
@@ -196,7 +237,7 @@ function project(config, kind) {
           if(rate!==0){
             const adjustment=state.debt*rate;
             state.debt+=adjustment;
-            ledger.push({month:m,category:"debt-indexation",amount:0,debtChange:adjustment,description:"Atualização não monetária do saldo devedor"});
+            ledger.push({id:kind+":"+m+":"+ledger.length,month:m,category:"debt-indexation",amount:0,cashChange:0,debtChange:adjustment,source:"contract-index",description:"Atualização não monetária do saldo devedor"});
           }
           // Recálculo mensal sobre saldo e prazo restantes: tanto Price quanto SAC liquidam na data contratual.
           const remaining=Math.max(1,state.originalMonths-m+1);
@@ -294,7 +335,7 @@ function compare(config) {
   validate(config);
   const kinds=Array.isArray(config.strategies)&&config.strategies.length?config.strategies:["rent","cash","mortgage"];
   const out=kinds.map(kind=>project(config,kind)).sort((a,b)=>b.summary.netWorthReal-a.summary.netWorthReal);
-  return {engineVersion:"0.1.0",schemaVersion:"1.0",parameters:config,horizonMonths:config.months,baselineFuture:baseline(config),results:out,leader:out[0]?.kind,alerts:[]};
+  return {engineVersion:"0.2.0",schemaVersion:"1.0",parameters:config,horizonMonths:config.months,baselineFuture:baseline(config),results:out,leader:out[0]?.kind,alerts:assessComparability(config)};
 }
 
 export {num, rateMonthly, payment, validate, baseline, project, compare, progressiveCapitalGainsTax, rentalEarlyExitPenalty, monthlyRateAt, monthlyAnnuityFactor, debtIndexRate};
