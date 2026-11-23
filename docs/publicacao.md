@@ -1,5 +1,11 @@
 # Publicação e QA web
 
+## Estado observado em 23/11/2026
+
+- PR #43 integrado na `main`, commit `3a64c1a7bc1af8fbce6d6df1bcaab601364da52d`.
+- Workflow [Publicar simulador](https://github.com/henriquecrang/comprar-alugar/actions/runs/45196710257) **concluiu com sucesso**, etapa de deploy também aprovada. Logs registram `Reported success!` e URL https://henriquecrang.github.io/comprar-alugar/.
+- A URL **não foi carregada com sucesso pela ferramenta externa de acesso web desta sessão**. Isso não invalida o deploy reportado, mas **não equivale a QA HTTP/browser**. A issue #33 e os critérios residuais da #34 permanecem abertos.
+
 ## Estratégia
 A interface utiliza ES modules JavaScript, sem backend. A opção atual é GitHub Pages publicando os arquivos do repositório após testes em Node. Ação: `.github/workflows/pages.yml`. `main.py` é apenas CLI local e não executa em Pages.
 
