@@ -35,7 +35,7 @@ try{
   await new Promise(resolve=>setTimeout(resolve,150));
   expect(JSON.parse(localStorage.getItem("comprar-alugar-v1")).rent.monthly===alternative.rent.monthly,
     "Importação de versão futura não sobrescreve cenário válido");
-  expect(document.querySelector("#toast").textContent.includes("não suportado"),"Erro de versão fica visível");
+  expect(document.querySelector("#storage-alert-text").textContent.includes("não suportado"),"Erro de versão fica visível");
   let blob;
   const originalCreate=URL.createObjectURL;
   const originalClick=HTMLAnchorElement.prototype.click;

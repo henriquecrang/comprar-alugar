@@ -178,7 +178,12 @@ function download(filename,content,type){const blob=new Blob([content],{type}),u
 $("#export").addEventListener("click",()=>{try{download("comprar-alugar.json",serializeScenario(data),"application/json")}catch(error){toast(error.message)}});
 $("#backup-storage").addEventListener("click",()=>{if(invalidBackup)download("comprar-alugar-backup-nao-validado.json",invalidBackup,"application/json")});
 $("#reset").addEventListener("click",()=>{storageBlocked=false;data=deep(defaults);buildForm();run();$("#storage-alert").hidden=true;toast("Cenário de exemplo restaurado")});
-$("#upload").addEventListener("change",async e=>{const file=e.target.files?.[0];if(!file)return;try{const imported=migrateScenario(JSON.parse(await file.text()));compare(imported);data=imported;storageBlocked=false;buildForm();run();$("#storage-alert").hidden=true;toast("JSON validado e importado")}catch(error){toast("Falha na importação: "+error.message)}e.target.value=""});
+$("#upload").addEventListener("change",async e=>{const file=e.target.files?.[0];if(!file)return;try{const imported=migrateScenario(JSON.parse(await file.text()));compare(imported);data=imported;storageBlocked=false;buildForm();run();$("#storage-alert").hidden=true;toast("JSON validado e importado")}catch(error){
+  $("#storage-alert-text").textContent="Importação recusada: "+error.message+". Seu cenário anterior continua preservado.";
+  $("#storage-alert").hidden=false;
+  $("#backup-storage").hidden=true;
+  toast("Falha na importação: "+error.message);
+}e.target.value=""});
 $("#export-ledger").addEventListener("click",()=>{const x=report?.results.find(x=>x.kind===$("#detail-strategy").value);if(!x)return;const rows=[["mes","categoria","valor","descricao"],...x.ledger.map(e=>[e.month,e.category,e.amount,e.description])];const csv=rows.map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(";")).join("\n");download("comprar-alugar-"+x.kind+"-ledger.csv","\ufeff"+csv,"text/csv;charset=utf-8");});
 $("#detail-strategy").addEventListener("change",details);
 $("#chart-view").addEventListener("change",()=>{if(report)chart(report.results)});
