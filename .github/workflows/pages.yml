@@ -35,3 +35,19 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  verify:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: browser-actions/setup-chrome@v2
+        id: chrome
+      - name: Verificar HTTPS e renderização real no Pages
+        run: npm run smoke
+        env:
+          CHROME_BIN: ${{ steps.chrome.outputs.chrome-path }}
+          SMOKE_TARGET_URL: https://henriquecrang.github.io/comprar-alugar/

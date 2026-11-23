@@ -1,4 +1,4 @@
-import {compare} from "./engine.mjs";
+import {compare} from "./model-api.mjs";
 import {sweep,breakEven,firstWinningMonth} from "./analysis.mjs";
 
 const defaults = {

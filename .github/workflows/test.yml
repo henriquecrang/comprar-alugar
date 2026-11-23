@@ -11,7 +11,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --check engine.mjs && node --check app.js && node --check analysis.mjs
+      - run: node --check engine.mjs && node --check app.js && node --check analysis.mjs && node --check model-api.mjs
       - run: npm test
-      - run: python3 main.py presets/rio-exemplo.json > /tmp/out.json
+      - run: node cli.mjs presets/rio-exemplo.json > /tmp/out.json
       - run: node -e "const x=require('/tmp/out.json'); if(!x.results?.length) process.exit(1)"
+      - uses: browser-actions/setup-chrome@v2
+        id: chrome
+      - run: npm run smoke
+        env:
+          CHROME_BIN: ${{ steps.chrome.outputs.chrome-path }}
