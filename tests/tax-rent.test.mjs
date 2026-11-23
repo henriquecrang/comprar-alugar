@@ -5,8 +5,8 @@ const c=()=>({months:12,initialCash:200000,investmentAnnualNet:0,property:{price
 test("Brazil 2026 capital gains marginal brackets",()=>{
  assert.equal(progressiveCapitalGainsTax(100000),15000);
  assert.equal(progressiveCapitalGainsTax(6000000),925000);
- assert.equal(progressiveCapitalGainsTax(11000000),1925000);
- assert.equal(progressiveCapitalGainsTax(32000000),6675000);
+ assert.equal(progressiveCapitalGainsTax(11000000),1825000);
+ assert.equal(progressiveCapitalGainsTax(32000000),6075000);
 });
 test("single-property exemption is opt-in and requires both declarations",()=>{
  const a=c();assert.ok(project(a,"cash").ledger.some(x=>x.category==="capital-gains-tax"&&x.amount<0));
