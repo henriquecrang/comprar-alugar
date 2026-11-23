@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Comprar ou Alugar — Simulador patrimonial</title>
+  <meta name="description" content="Compare aluguel, compra à vista, financiamento, parcelamento e consórcio com patrimônio e custo de oportunidade mensais.">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="shell bar">
+      <div class="brand"><div class="brand-icon" aria-hidden="true">⌂</div><div><strong>Comprar ou Alugar</strong><small>Análise patrimonial de moradia</small></div></div>
+      <nav class="head-actions" aria-label="Ações da simulação">
+        <button id="reset" type="button" class="quiet">Exemplo inicial</button>
+        <label class="button quiet upload">Importar JSON <input id="upload" type="file" accept=".json,application/json" hidden></label>
+        <button id="export" type="button" class="primary">Exportar JSON</button>
+      </nav>
+    </div>
+  </header>
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">SIMULADOR FINANCEIRO · BETA 0.1</p>
+      <h1>A casa que você compra. <em>O patrimônio que você constrói.</em></h1>
+      <p>Compare estratégias com a mesma dotação inicial, contabilizando cada real investido, gasto, financiado ou recuperado. Os resultados dependem das suas premissas — e não substituem propostas nem contratos.</p>
+      <div class="hero-links"><a href="#resultados">Ver comparação ↓</a><a href="#parametros">Configurar premissas ↓</a></div>
+    </section>
+    <section class="metrics" aria-label="Indicadores principais">
+      <article class="metric"><span>Maior patrimônio real</span><strong id="winner">—</strong><small id="winner-detail">Aguardando dados</small></article>
+      <article class="metric"><span>Vantagem sobre o segundo</span><strong id="advantage">—</strong><small>Em reais do início da simulação</small></article>
+      <article class="metric"><span>Horizonte de análise</span><strong id="horizon">—</strong><small>Todos os fluxos são mensais</small></article>
+      <article class="metric"><span>Investimento sem moradia</span><strong id="baseline">—</strong><small>Referência hipotética sem gasto habitacional</small></article>
+    </section>
+    <section class="board" id="resultados">
+      <div class="section-heading"><div><p class="eyebrow">COMPARAÇÃO</p><h2>Quem termina com mais?</h2><p>Patrimônio financeiro + valor de mercado do imóvel − dívidas, deflacionado pelo IPCA assumido.</p></div><label class="switch">Visualização <select id="chart-view"><option value="real">Reais de hoje</option><option value="nominal">Nominal</option></select></label></div>
+      <div class="chart-wrap"><svg id="wealth-chart" viewBox="0 0 840 275" role="img" aria-label="Evolução do patrimônio líquido por estratégia"></svg><div id="legend" class="legend"></div></div>
+      <div class="table-scroll"><table><thead><tr><th>Estratégia</th><th>Patrimônio real</th><th>Diferença para a líder</th><th>Custo mensal eq.</th><th>Caixa final</th><th>Maior falta de caixa</th><th></th></tr></thead><tbody id="comparison-body"></tbody></table></div>
+      <p class="footnote">O custo mensal equivalente representa a distância patrimonial para um investimento hipotético sem despesa de moradia. Não é a prestação ou o aluguel do mês. Valores negativos significam ganho econômico relativo a essa referência.</p>
+    </section>
+    <section class="board sensitivity" id="sensibilidade">
+      <div class="section-heading"><div><p class="eyebrow">TESTE SUAS HIPÓTESES</p><h2>Quanto o resultado muda?</h2><p>Análises isoladas para compra à vista versus aluguel, mantendo as demais premissas.</p></div></div>
+      <div id="sensitivity-results" class="sensitivity-grid"></div>
+      <div class="equilibria"><div><span>Aluguel de equilíbrio</span><strong id="rent-break-even">—</strong><small>Aluguel que igualaria a riqueza final das duas opções</small></div><div><span>Primeiro mês em que comprar supera alugar</span><strong id="first-win">—</strong><small>Busca até 20 anos; o resultado pode voltar a inverter</small></div></div>
+    </section>
+    <section class="lower">
+      <div class="panel controls" id="parametros">
+        <div class="section-heading compact"><div><p class="eyebrow">PREMISSAS</p><h2>Monte seu cenário</h2></div><span class="autosave">● Salvo neste navegador</span></div>
+        <fieldset class="strategy-fieldset"><legend>Estratégias para comparar</legend><div id="strategies" class="strategy-options"></div></fieldset>
+        <div id="form-groups" class="form-groups"></div>
+      </div>
+      <div class="side">
+        <div class="panel">
+          <p class="eyebrow">AUDITORIA</p><h2>Lançamentos mensais</h2>
+          <label for="detail-strategy">Estratégia</label><select id="detail-strategy"></select>
+          <div class="table-scroll tight"><table><thead><tr><th>Mês</th><th>Caixa</th><th>Imóvel</th><th>Dívida</th><th>Patrimônio</th></tr></thead><tbody id="monthly-body"></tbody></table></div>
+          <button type="button" id="export-ledger" class="quiet block">Exportar lançamentos CSV</button>
+        </div>
+        <div class="panel" id="warnings-panel">
+          <p class="eyebrow">LIMITAÇÕES E ALERTAS</p><h2>Antes de decidir</h2>
+          <ul id="warnings"></ul>
+          <p class="small-muted">As taxas do cenário de exemplo são ilustrativas. Custos legais, de consórcio, imposto sobre ganho de capital e contratos devem ser conferidos antes do uso decisório.</p>
+        </div>
+        <div class="panel knowledge">
+          <p class="eyebrow">METODOLOGIA</p><h2>O que entra na conta?</h2>
+          <p>O capital da entrada deixa de render; a amortização reduz a dívida, não “desaparece”; o imóvel pode valorizar ou desvalorizar; toda despesa tem mês próprio.</p>
+          <a href="./docs/plano-e-especificacao.md" target="_blank" rel="noopener noreferrer">Abrir pesquisa e roadmap ↗</a>
+          <a href="./docs/adr-001-arquitetura.md" target="_blank" rel="noopener noreferrer">Como o motor funciona ↗</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="shell footer"><span>Software aberto · Simulações locais no navegador · Nenhum dado é enviado a servidor pelo aplicativo</span><span>Brasil · BRL · v0.1</span></footer>
+  <div id="toast" class="toast" aria-live="polite" role="status"></div>
+</body></html>

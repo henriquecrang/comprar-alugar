@@ -1,0 +1,16 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {compare,project,rateMonthly,validate,payment} from '../engine.mjs';
+const basic=()=>({months:12,initialCash:10000,monthlyContribution:0,inflationAnnual:0,investmentAnnualNet:0,property:{price:1000,marketValue:1000},rent:{monthly:0},mortgage:{downPayment:200,months:24,system:"sac",annualInterestRate:0},seller:{downPayment:200,months:24,annualInterestRate:0},consortium:{credit:800,remainingDebt:800,months:24},sale:{sellAtEnd:true},strategies:['rent','cash','mortgage','seller','consortium']});
+test('financial parity at zero interest, appreciation and rent',()=>{const c=compare(basic());for(const x of c.results)assert.ok(Math.abs(x.summary.netWorth-10000)<1e-6,x.kind+' '+x.summary.netWorth)});
+test('mortgage leaves no residual debt after payoff',()=>{const x=project(basic(),'mortgage');assert.equal(x.months.at(-1).debt,0);assert.equal(x.months.at(-1).property,0);assert.ok(x.ledger.some(e=>e.category==='debt-payoff'))});
+test('deposit is linked capital, not expense',()=>{const c=basic();c.rent.deposit=300;const x=project(c,'rent');assert.equal(x.months[0].netWorth,10000);assert.equal(x.months.at(-1).netWorth,10000)});
+test('higher final sale price increases wealth',()=>{const c=basic();const a=project(c,'cash').summary.netWorth;c.property.appreciationRealAnnual=0.1;const b=project(c,'cash').summary.netWorth;assert.ok(b>a)});
+test('price system and SAC amortize correctly',()=>{const c=basic();c.mortgage.system='price';c.mortgage.annualInterestRate=0.12;const x=project(c,'mortgage');assert.equal(x.summary.debt,0);assert.ok(x.ledger.filter(e=>e.category==='loan-interest').length>0);assert.ok(payment(100,0,10,'price',1)===10)});
+test('early exit never charges remaining installments',()=>{const c=basic();c.months=1;const x=project(c,'mortgage');assert.equal(x.ledger.filter(e=>e.category==='loan-principal').length,1);assert.ok(x.ledger.some(e=>e.category==='debt-payoff'))});
+test('investment opportunity makes free renting better than owning a flat asset',()=>{const c=basic();c.investmentAnnualNet=.1;const x=compare(c);assert.equal(x.leader,'rent')});
+test('monthly rent changes exactly one portfolio',()=>{const c=basic();c.rent.monthly=100;assert.ok(project(c,'rent').summary.netWorth<project(c,'cash').summary.netWorth)});
+test('inflation changes real output not nominal output',()=>{const c=basic();const a=project(c,'rent').summary;c.inflationAnnual=.1;const b=project(c,'rent').summary;assert.equal(a.netWorth,b.netWorth);assert.ok(b.netWorthReal<a.netWorthReal)});
+test('invalid prices and time are rejected',()=>{const c=basic();c.property.price=-2;assert.throws(()=>validate(c));c.property.price=100;c.months=0;assert.throws(()=>validate(c))});
+test('works without sale and keeps illiquid property',()=>{const c=basic();c.sale.sellAtEnd=false;const x=project(c,'cash');assert.ok(x.summary.property>0);assert.equal(x.summary.debt,0)});
+test('renovation is paid once, with separate residual',()=>{const c=basic();c.property.renovations=[{month:3,cost:100,marketRecoveryRate:.3}];const x=project(c,'cash');assert.ok(Math.abs(x.summary.netWorth-9930)<1e-6)});

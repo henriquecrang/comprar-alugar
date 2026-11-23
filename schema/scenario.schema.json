@@ -1,0 +1,231 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Comprar ou Alugar — entrada",
+  "type": "object",
+  "required": [
+    "months",
+    "initialCash",
+    "property",
+    "rent"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "months": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 600
+    },
+    "initialCash": {
+      "type": "number",
+      "minimum": 0
+    },
+    "monthlyContribution": {
+      "type": "number"
+    },
+    "minimumReserve": {
+      "type": "number",
+      "minimum": 0
+    },
+    "inflationAnnual": {
+      "type": "number",
+      "exclusiveMinimum": -1
+    },
+    "investmentAnnualNet": {
+      "type": "number",
+      "exclusiveMinimum": -1
+    },
+    "negativeCashAnnualRate": {
+      "type": "number",
+      "exclusiveMinimum": -1
+    },
+    "property": {
+      "type": "object",
+      "required": [
+        "price"
+      ],
+      "properties": {
+        "price": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "marketValue": {
+          "type": "number",
+          "minimum": 0
+        },
+        "appreciationRealAnnual": {
+          "type": "number",
+          "exclusiveMinimum": -1
+        },
+        "renovations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "month",
+              "cost"
+            ],
+            "properties": {
+              "month": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "cost": {
+                "type": "number",
+                "minimum": 0
+              },
+              "marketRecoveryRate": {
+                "type": "number"
+              },
+              "taxBasisEligible": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "initialMaintenanceReserve": {
+          "type": "number",
+          "minimum": 0
+        },
+        "maintenanceReserveMonthly": {
+          "type": "number",
+          "minimum": 0
+        },
+        "reserveAnnualReturn": {
+          "type": "number",
+          "exclusiveMinimum": -1
+        }
+      }
+    },
+    "rent": {
+      "type": "object",
+      "required": [
+        "monthly"
+      ],
+      "properties": {
+        "monthly": {
+          "type": "number",
+          "minimum": 0
+        },
+        "prepaid": {
+          "type": "boolean"
+        },
+        "deposit": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "mortgage": {
+      "type": "object",
+      "properties": {
+        "downPayment": {
+          "type": "number",
+          "minimum": 0
+        },
+        "months": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "system": {
+          "enum": [
+            "sac",
+            "price"
+          ]
+        },
+        "annualInterestRate": {
+          "type": "number",
+          "exclusiveMinimum": -1
+        }
+      }
+    },
+    "seller": {
+      "type": "object",
+      "properties": {
+        "downPayment": {
+          "type": "number",
+          "minimum": 0
+        },
+        "months": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "consortium": {
+      "type": "object",
+      "properties": {
+        "credit": {
+          "type": "number",
+          "minimum": 0
+        },
+        "remainingDebt": {
+          "type": "number",
+          "minimum": 0
+        },
+        "months": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "sale": {
+      "type": "object",
+      "properties": {
+        "sellAtEnd": {
+          "type": "boolean"
+        }
+      }
+    },
+    "strategies": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "rent",
+          "cash",
+          "mortgage",
+          "seller",
+          "consortium"
+        ]
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    },
+    "monthlyRates": {
+      "type": "object",
+      "properties": {
+        "inflation": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": -1
+          }
+        },
+        "investment": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": -1
+          }
+        },
+        "negativeCash": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": -1
+          }
+        },
+        "propertyExtra": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": -1
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,13 @@
+{
+  "name": "comprar-alugar",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "simulate": "node cli.mjs presets/rio-exemplo.json"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
